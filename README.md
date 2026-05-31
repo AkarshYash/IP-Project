@@ -272,28 +272,43 @@ bluecollar-chatbot/
 └── docker-compose.yml
 ```
 
-## 🎥 Video Demo
+=## 🎥 Video Demo
 
 <div align="center">
   <a href="https://drive.google.com/file/d/1Q45-azblnJQ6QVOnnhaSdGOoDT4tVv4U/view?usp=sharing" target="_blank">
-    <img src="https://img.shields.io/badge/▶️_WATCH_DEMO_ON_DRIVE-FF0000?style=for-the-badge&logo=googledrive&logoColor=white" alt="Watch Demo">
-  </a>
-</div>
-
-<br>
-
-<div align="center">
-  <a href="https://drive.google.com/file/d/1Q45-azblnJQ6QVOnnhaSdGOoDT4tVv4U/view?usp=sharing" target="_blank">
-    <img src="https://placehold.co/1280x720/0a0a0f/ffffff?text=🎬+SAHAYAK+v2+DEMO+▶+Click+to+Play" 
-         alt="Sahayak AI Chatbot Demo"
-         style="border-radius: 16px; border: 1px solid #333; max-width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"
-         width="800">
+    <img src="https://via.placeholder.com/1280x720/0a0a0f/ffffff?text=🎬+SAHAYAK+v2+DEMO+▶" 
+         alt="Sahayak Demo Video Thumbnail"
+         style="border-radius: 16px; border: 1px solid #2d2d3d; box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-width: 100%; transition: transform 0.2s;"
+         onmouseover="this.style.transform='scale(1.02)'"
+         onmouseout="this.style.transform='scale(1)'">
   </a>
 </div>
 
 <div align="center">
   <br>
-  <i>📌 Full demo: Dashboard • Chat • Analytics • Fraud detection • Dark mode</i>
+  <a href="https://drive.google.com/file/d/1Q45-azblnJQ6QVOnnhaSdGOoDT4tVv4U/view?usp=sharing" target="_blank">
+    <img src="https://img.shields.io/badge/Google_Drive-Watch_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white" alt="Google Drive">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://drive.google.com/file/d/1Q45-azblnJQ6QVOnnhaSdGOoDT4tVv4U/view?usp=sharing" target="_blank">
+    <img src="https://img.shields.io/badge/Direct_Link-Click_Here-00C853?style=for-the-badge&logo=link&logoColor=white" alt="Direct Link">
+  </a>
+</div>
+
+<div align="center">
+  <br>
+  <details>
+    <summary><b>📋 Demo Chapters (Click to expand)</b></summary>
+    <br>
+    <table>
+      <tr><td>⏱️ 0:00 - 0:45</td><td>Dashboard & KPIs overview</td></tr>
+      <tr><td>⏱️ 0:45 - 2:30</td><td>Real-time chat with Llama 3 70B</td></tr>
+      <tr><td>⏱️ 2:30 - 3:15</td><td>Analytics dashboard (charts & metrics)</td></tr>
+      <tr><td>⏱️ 3:15 - 4:00</td><td>Fraud detection & Worker management</td></tr>
+      <tr><td>⏱️ 4:00 - 4:45</td><td>Dark mode & Settings</td></tr>
+      <tr><td>⏱️ 4:45 - 5:30</td><td>Mobile responsiveness demo</td></tr>
+    </table>
+  </details>
 </div>
 
 ---
