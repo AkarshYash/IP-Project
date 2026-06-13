@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sahayak — Disputes &amp; Fraud</title>
+  <meta name="description" content="Dispute Resolution and Fraud Management">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    .page-tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      background: var(--bg-card);
+      width: fit-content;
+      margin-bottom: 24px;
+    }
+    .page-tab {
+      padding: 9px 22px;
+      border-radius: calc(var(--radius-md) - 2px);
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .page-tab.active {
+      background: var(--saffron);
+      color: white;
+      box-shadow: 0 2px 8px rgba(255,107,53,0.3);
+    }
+
+    .dispute-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      transition: all 0.2s;
+      border-left: 4px solid transparent;
+    }
+    .dispute-card:hover { border-color: var(--saffron); box-shadow: var(--shadow-md); }
+    .dispute-card.priority-high  { border-left-color: var(--ruby-light); }
+    .dispute-card.priority-medium { border-left-color: var(--amber-light); }
+    .dispute-card.priority-low   { border-left-color: var(--emerald-light); }
+
+    .dispute-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* New dispute modal */
+    .modal-overlay { display: none; }
+    .modal-overlay.open { display: flex; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+
+    .risk-bar {
+      height: 6px;
+      background: var(--bg-input);
+      border-radius: 10px;
+      overflow: hidden;
+      width: 120px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .risk-fill { height: 100%; border-radius: 10px; transition: width 0.4s ease; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main-content">
+    <header class="topbar" id="topbar"></header>
+    <div class="page-body">
+
+      <!-- Stats Grid -->
+      <div class="stats-grid" style="margin-bottom:24px" id="stats-row">
+        <div class="stat-card ruby">
+          <div class="stat-icon ruby">🆕</div>
+          <div class="stat-info">
+            <div class="stat-value" id="d-open">—</div>
+            <div class="stat-label">Open Disputes</div>
+          </div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-icon amber">🔍</div>
+          <div class="stat-info">
+            <div class="stat-value" id="d-investigating">—</div>
+            <div class="stat-label">Investigating</div>
+          </div>
+        </div>
+        <div class="stat-card emerald">
+          <div class="stat-icon emerald">✅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="d-resolved">—</div>
+            <div class="stat-label">Resolved</div>
+          </div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">💰</div>
+          <div class="stat-info">
+            <div class="stat-value" id="d-refunded">—</div>
+            <div class="stat-label">Refunded</div>
+          </div>
+        </div>
+        <div class="stat-card ruby">
+          <div class="stat-icon ruby">❌</div>
+          <div class="stat-info">
+            <div class="stat-value" id="d-rejected">—</div>
+            <div class="stat-label">Rejected</div>
+          </div>
+        </div>
+        <div class="stat-card saffron">
+          <div class="stat-icon saffron">🚨</div>
+          <div class="stat-info">
+            <div class="stat-value" id="f-open">—</div>
+            <div class="stat-label">Fraud Alerts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page Tabs -->
+      <div class="page-tabs">
+        <button class="page-tab active" id="tab-disputes" onclick="switchTab('disputes')">⚖️ Disputes</button>
+        <button class="page-tab" id="tab-fraud" onclick="switchTab('fraud')">🚨 Fraud Alerts</button>
+      </div>
+
+      <!-- Disputes Tab -->
+      <div id="pane-disputes">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">⚖️ Dispute Management</div>
+              <div class="card-subtitle">Review, approve, refund or reject worker/employer disputes</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select class="select" id="dispute-status-filter" onchange="loadDisputes()" style="width:150px">
+                <option value="">All Status</option>
+                <option value="open">Open</option>
+                <option value="investigating">Investigating</option>
+                <option value="resolved">Resolved</option>
+                <option value="refunded">Refunded</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <select class="select" id="dispute-priority-filter" onchange="loadDisputes()" style="width:130px">
+                <option value="">All Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="loadDisputes()">↻</button>
+              <button class="btn btn-primary btn-sm" onclick="openNewDisputeModal()">+ New Dispute</button>
+            </div>
+          </div>
+          <div id="disputes-list" style="display:flex;flex-direction:column;gap:12px;min-height:80px">
+            <div style="text-align:center;padding:30px"><div class="spinner"></div></div>
+          </div>
+          <div id="disputes-pagination" class="pagination" style="padding:16px 0 0"></div>
+        </div>
+      </div>
+
+      <!-- Fraud Alerts Tab -->
+      <div id="pane-fraud" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🚨 Fraud Alert Management</div>
+              <div class="card-subtitle">AI-detected suspicious activity — review and take action</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <select class="select" id="fraud-status-filter" onchange="loadFraud()" style="width:150px">
+                <option value="">All Status</option>
+                <option value="open">Open</option>
+                <option value="investigating">Investigating</option>
+                <option value="suspended">Suspended</option>
+                <option value="cleared">Cleared</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="loadFraud()">↻</button>
+            </div>
+          </div>
+          <div id="fraud-list" style="display:flex;flex-direction:column;gap:12px;min-height:80px">
+            <div style="text-align:center;padding:30px"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- New Dispute Modal -->
+<div class="modal-overlay" id="new-dispute-modal" onclick="if(event.target===this)closeNewDisputeModal()">
+  <div class="modal" style="max-width:560px;width:92%">
+    <div class="modal-header">
+      <div class="modal-title">📝 File New Dispute</div>
+      <button class="modal-close" onclick="closeNewDisputeModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Worker Name</label>
+        <input class="input" type="text" id="nd-worker" placeholder="Worker's name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Employer Name</label>
+        <input class="input" type="text" id="nd-employer" placeholder="Employer's name">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Amount (₹)</label>
+        <input class="input" type="number" id="nd-amount" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="select" id="nd-priority">
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reason / Description</label>
+      <textarea class="input" id="nd-reason" rows="3" placeholder="Describe the dispute..." style="resize:vertical;padding-top:10px"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-ghost" onclick="closeNewDisputeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitNewDispute()">📝 File Dispute</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+  window.ACTIVE_PAGE = 'disputes';
+
+  let allDisputes = [];
+  let allFraud = [];
+  let activeTab = 'disputes';
+
+  const STATUS_BADGE = {
+    open:          'badge-danger',
+    investigating: 'badge-warning',
+    resolved:      'badge-success',
+    refunded:      'badge-info',
+    rejected:      'badge-default',
+    suspended:     'badge-danger',
+    cleared:       'badge-success',
+  };
+
+  const PRIORITY_BADGE = {
+    high:   'badge-danger',
+    medium: 'badge-warning',
+    low:    'badge-success',
+  };
+
+  // ── Tab switching ────────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('pane-disputes').style.display = tab === 'disputes' ? 'block' : 'none';
+    document.getElementById('pane-fraud').style.display    = tab === 'fraud'    ? 'block' : 'none';
+    document.getElementById('tab-disputes').classList.toggle('active', tab === 'disputes');
+    document.getElementById('tab-fraud').classList.toggle('active', tab === 'fraud');
+    if (tab === 'fraud' && allFraud.length === 0) loadFraud();
+  }
+
+  // ── Disputes ─────────────────────────────────────────────────────────────────
+  async function loadDisputes() {
+    const status   = document.getElementById('dispute-status-filter').value;
+    const priority = document.getElementById('dispute-priority-filter').value;
+    let url = '/api/disputes/';
+    const params = [];
+    if (status)   params.push(`status=${status}`);
+    if (priority) params.push(`priority=${priority}`);
+    if (params.length) url += '?' + params.join('&');
+
+    const container = document.getElementById('disputes-list');
+    container.innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner"></div></div>';
+
+    try {
+      const data = await api.get(url);
+      allDisputes = data.disputes || [];
+      renderDisputes(allDisputes);
+      updateStats();
+    } catch (e) {
+      container.innerHTML = renderError(e.message);
+    }
+  }
+
+  function renderDisputes(list) {
+    const container = document.getElementById('disputes-list');
+    if (!list.length) {
+      container.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">⚖️</div>
+        <p>No disputes found with current filters.</p>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = list.map(d => `
+      <div class="dispute-card priority-${d.priority || 'medium'}" id="dispute-card-${d.id}">
+        <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <div class="dispute-meta-row">
+              <span style="font-weight:700;color:var(--saffron);font-size:12px">${d.dispute_ref || '#D-' + d.id}</span>
+              <span class="badge ${STATUS_BADGE[d.status] || 'badge-default'}">${d.status}</span>
+              <span class="badge ${PRIORITY_BADGE[d.priority] || 'badge-warning'}">${d.priority || 'medium'} priority</span>
+            </div>
+            <div style="font-weight:600;color:var(--text-primary);margin-bottom:6px;font-size:14px">
+              👷 ${d.worker_name || 'Worker'} &nbsp;↔&nbsp; 🏢 ${d.employer_name || 'Employer'}
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">${d.reason || 'No reason provided'}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:8px;display:flex;gap:16px;flex-wrap:wrap">
+              <span>💰 Amount: <strong style="color:var(--emerald-light)">₹${Number(d.amount_inr || 0).toLocaleString('en-IN')}</strong></span>
+              <span>🕐 Filed: ${formatDate(d.created_at)}</span>
+              ${d.resolved_at ? `<span>✅ Resolved: ${formatDate(d.resolved_at)}</span>` : ''}
+            </div>
+          </div>
+          ${d.status === 'open' || d.status === 'investigating' ? `
+            <div class="action-group" style="flex-direction:column">
+              <button class="btn btn-success btn-sm" onclick="disputeAction(${d.id},'approve')" style="width:120px;justify-content:center">✅ Approve</button>
+              <button class="btn btn-primary btn-sm" onclick="disputeAction(${d.id},'refund')" style="width:120px;justify-content:center">💰 Refund</button>
+              <button class="btn btn-ghost btn-sm" onclick="disputeAction(${d.id},'reject')" style="width:120px;justify-content:center;color:var(--ruby-light);border-color:var(--ruby-light)">❌ Reject</button>
+            </div>
+          ` : `
+            <div style="align-self:center">
+              <span class="badge ${STATUS_BADGE[d.status] || 'badge-default'}" style="font-size:13px;padding:6px 14px">
+                ${d.status === 'resolved' ? '✅' : d.status === 'refunded' ? '💰' : '❌'} ${d.status}
+              </span>
+            </div>
+          `}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function disputeAction(id, action) {
+    const labels = { approve: 'Approve', refund: 'Issue Refund for', reject: 'Reject' };
+    if (!confirm(`${labels[action] || action} this dispute?`)) return;
+    try {
+      await api.patch(`/api/disputes/${id}/action`, { action });
+      showToast(`Dispute ${action}d successfully`, 'success');
+      loadDisputes();
+    } catch (e) {
+      showToast('Action failed: ' + e.message, 'error');
+    }
+  }
+
+  // ── Fraud Alerts ─────────────────────────────────────────────────────────────
+  async function loadFraud() {
+    const status = document.getElementById('fraud-status-filter').value;
+    const url = '/api/fraud/' + (status ? `?status=${status}` : '');
+    const container = document.getElementById('fraud-list');
+    container.innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner"></div></div>';
+
+    try {
+      const data = await api.get(url);
+      allFraud = data.alerts || [];
+      renderFraud(allFraud);
+      updateStats();
+    } catch (e) {
+      container.innerHTML = renderError(e.message);
+    }
+  }
+
+  function getRiskColor(score) {
+    if (score >= 75) return 'var(--ruby-light)';
+    if (score >= 50) return 'var(--amber-light)';
+    return 'var(--emerald-light)';
+  }
+
+  function getRiskLabel(score) {
+    if (score >= 75) return '🔴 HIGH';
+    if (score >= 50) return '🟡 MEDIUM';
+    return '🟢 LOW';
+  }
+
+  function renderFraud(list) {
+    const container = document.getElementById('fraud-list');
+    if (!list.length) {
+      container.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">✅</div>
+        <p>No active fraud alerts. Platform is safe.</p>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = list.map(a => {
+      const riskColor = getRiskColor(a.risk_score || 0);
+      const riskLabel = getRiskLabel(a.risk_score || 0);
+      const isActionable = a.status === 'open' || a.status === 'investigating';
+      return `
+        <div class="dispute-card" style="border-left:4px solid ${riskColor}" id="fraud-card-${a.id}">
+          <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <div class="dispute-meta-row">
+                <span style="font-weight:700;color:var(--saffron);font-size:12px">${a.alert_ref || '#F-' + a.id}</span>
+                <span class="badge" style="background:${riskColor}22;color:${riskColor}">${riskLabel} RISK</span>
+                <span class="badge badge-default">${(a.alert_type || 'unknown').replace(/_/g,' ')}</span>
+                <span class="badge ${STATUS_BADGE[a.status] || 'badge-default'}">${a.status}</span>
+              </div>
+              <div style="font-weight:600;color:var(--text-primary);margin-bottom:6px;font-size:14px">
+                👤 ${a.suspect_name || 'Unknown'}
+              </div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">${a.description || 'Suspicious activity detected'}</div>
+              <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+                <div class="risk-bar">
+                  <div class="risk-fill" style="width:${a.risk_score || 0}%;background:${riskColor}"></div>
+                </div>
+                <span style="font-size:12px;color:${riskColor};font-weight:700">
+                  Risk: ${a.risk_score || 0}/100
+                </span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:6px">
+                🕐 Detected: ${formatDate(a.created_at)}
+              </div>
+            </div>
+            ${isActionable ? `
+              <div class="action-group" style="flex-direction:column">
+                <button class="btn btn-ghost btn-sm" onclick="fraudAction(${a.id},'investigate')"
+                  style="width:130px;justify-content:center;border-color:var(--amber-light);color:var(--amber-light)">
+                  🔍 Investigate
+                </button>
+                <button class="btn btn-ghost btn-sm" onclick="fraudAction(${a.id},'suspend')"
+                  style="width:130px;justify-content:center;border-color:var(--ruby-light);color:var(--ruby-light)">
+                  🚫 Suspend
+                </button>
+                <button class="btn btn-ghost btn-sm" onclick="fraudAction(${a.id},'clear')"
+                  style="width:130px;justify-content:center;border-color:var(--emerald-light);color:var(--emerald-light)">
+                  ✅ Clear
+                </button>
+              </div>
+            ` : `
+              <div style="align-self:center">
+                <span class="badge ${STATUS_BADGE[a.status] || 'badge-default'}" style="font-size:13px;padding:6px 14px">
+                  ${a.status}
+                </span>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function fraudAction(id, action) {
+    const labels = { investigate: 'Mark as investigating', suspend: 'Suspend user for', clear: 'Clear alert for' };
+    if (!confirm(`${labels[action] || action} this alert?`)) return;
+    try {
+      await api.patch(`/api/fraud/${id}/action`, { action });
+      showToast(`Alert marked as ${action}`, 'success');
+      loadFraud();
+    } catch (e) {
+      showToast('Action failed: ' + e.message, 'error');
+    }
+  }
+
+  // ── Stats ────────────────────────────────────────────────────────────────────
+  function updateStats() {
+    const countD = (s) => allDisputes.filter(d => d.status === s).length;
+    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+    el('d-open',          countD('open'));
+    el('d-investigating', countD('investigating'));
+    el('d-resolved',      countD('resolved'));
+    el('d-refunded',      countD('refunded'));
+    el('d-rejected',      countD('rejected'));
+    el('f-open',          allFraud.filter(a => a.status === 'open').length);
+  }
+
+  // ── New Dispute Modal ────────────────────────────────────────────────────────
+  function openNewDisputeModal() {
+    document.getElementById('new-dispute-modal').classList.add('open');
+  }
+
+  function closeNewDisputeModal() {
+    document.getElementById('new-dispute-modal').classList.remove('open');
+  }
+
+  async function submitNewDispute() {
+    const worker   = document.getElementById('nd-worker').value.trim();
+    const employer = document.getElementById('nd-employer').value.trim();
+    const amount   = document.getElementById('nd-amount').value;
+    const priority = document.getElementById('nd-priority').value;
+    const reason   = document.getElementById('nd-reason').value.trim();
+
+    if (!worker || !employer || !reason) {
+      showToast('Please fill in worker, employer, and reason', 'warning');
+      return;
+    }
+
+    try {
+      await api.post('/api/disputes/', {
+        worker_name: worker,
+        employer_name: employer,
+        amount_inr: parseFloat(amount) || 0,
+        priority,
+        reason,
+        status: 'open'
+      });
+      showToast('Dispute filed successfully', 'success');
+      closeNewDisputeModal();
+      loadDisputes();
+    } catch (e) {
+      showToast('Failed to file dispute: ' + e.message, 'error');
+    }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function renderError(msg) {
+    return `<div style="text-align:center;padding:30px;color:var(--ruby-light)">❌ Error: ${msg}</div>`;
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    buildSidebar('disputes');
+    buildTopbar('⚖️ Disputes & Fraud', 'Risk Management');
+    loadDisputes();
+  });
+</script>
+</body>
+</html>

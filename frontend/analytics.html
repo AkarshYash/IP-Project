@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sahayak — Analytics</title>
+  <meta name="description" content="Platform Analytics and Insights">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    .kpi-compare-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: var(--transition);
+    }
+    .kpi-compare-card:hover {
+      border-color: rgba(255,107,53,0.2);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .kpi-compare-value {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+    .kpi-compare-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .kpi-compare-sub   { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+    .kpi-change-up   { color: var(--emerald-light); font-weight: 600; font-size: 12px; }
+    .kpi-change-down { color: var(--ruby-light);    font-weight: 600; font-size: 12px; }
+
+    .chart-tall { height: 280px; }
+    .chart-short { height: 220px; }
+
+    .section-heading {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-primary);
+      margin: 28px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      margin-left: 8px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row-label { color: var(--text-secondary); }
+    .stat-row-val   { font-weight: 600; color: var(--text-primary); }
+
+    .availability-legend {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .refresh-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .auto-refresh-badge {
+      background: var(--emerald-glow);
+      color: var(--emerald-light);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main-content">
+    <header class="topbar" id="topbar"></header>
+    <div class="page-body">
+
+      <!-- Page header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:13px;color:var(--text-muted)" id="last-refreshed">Loading data…</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="auto-refresh-badge">⟳ Auto 30s</span>
+          <button class="btn btn-secondary btn-sm" onclick="refreshAll()">↻ Refresh Now</button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="section-heading">📊 Key Performance Indicators</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px">
+
+        <div class="kpi-compare-card" style="border-top:3px solid var(--saffron)">
+          <div style="font-size:22px;margin-bottom:6px">💬</div>
+          <div class="kpi-compare-value" id="kpi-conversations">—</div>
+          <div class="kpi-compare-label">Total Conversations</div>
+          <div class="kpi-compare-sub"><span class="kpi-change-up" id="kpi-today-conv">+0 today</span></div>
+        </div>
+
+        <div class="kpi-compare-card" style="border-top:3px solid var(--blue-mid)">
+          <div style="font-size:22px;margin-bottom:6px">📨</div>
+          <div class="kpi-compare-value" id="kpi-messages">—</div>
+          <div class="kpi-compare-label">Total Messages</div>
+          <div class="kpi-compare-sub"><span class="kpi-change-up" id="kpi-today-msg">+0 today</span></div>
+        </div>
+
+        <div class="kpi-compare-card" style="border-top:3px solid var(--emerald)">
+          <div style="font-size:22px;margin-bottom:6px">👷</div>
+          <div class="kpi-compare-value" id="kpi-workers">—</div>
+          <div class="kpi-compare-label">Workers in DB</div>
+          <div class="kpi-compare-sub"><span class="kpi-change-up" id="kpi-available">— available</span></div>
+        </div>
+
+        <div class="kpi-compare-card" style="border-top:3px solid var(--amber)">
+          <div style="font-size:22px;margin-bottom:6px">⚡</div>
+          <div class="kpi-compare-value" id="kpi-response-time">—</div>
+          <div class="kpi-compare-label">Avg Response</div>
+          <div class="kpi-compare-sub" style="color:var(--text-muted)">Groq LLM + RAG</div>
+        </div>
+
+        <div class="kpi-compare-card" style="border-top:3px solid var(--ruby)">
+          <div style="font-size:22px;margin-bottom:6px">😊</div>
+          <div class="kpi-compare-value" id="kpi-satisfaction">—</div>
+          <div class="kpi-compare-label">Satisfaction Rate</div>
+          <div class="kpi-compare-sub" style="color:var(--text-muted)">User feedback</div>
+        </div>
+
+        <div class="kpi-compare-card" style="border-top:3px solid var(--emerald-light)">
+          <div style="font-size:22px;margin-bottom:6px">💰</div>
+          <div class="kpi-compare-value" id="kpi-gmv-month">—</div>
+          <div class="kpi-compare-label">GMV This Month</div>
+          <div class="kpi-compare-sub"><span class="kpi-change-up" id="kpi-gmv-today">₹0 today</span></div>
+        </div>
+
+      </div>
+
+      <!-- Hourly + Intent Charts -->
+      <div class="section-heading">📈 Activity Analysis</div>
+      <div class="grid-2 mb-24">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📈 Hourly Message Volume (24h)</div>
+              <div class="card-subtitle">Chat activity by hour today</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻</button>
+          </div>
+          <div class="chart-container chart-tall">
+            <canvas id="hourly-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🎯 Intent Distribution</div>
+              <div class="card-subtitle">What users are asking about</div>
+            </div>
+          </div>
+          <div class="chart-container chart-tall">
+            <canvas id="intent-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language + Worker Availability -->
+      <div class="section-heading">🌐 Demographics & Workforce</div>
+      <div class="grid-2 mb-24">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🌐 Language Distribution</div>
+              <div class="card-subtitle">Conversations by language</div>
+            </div>
+          </div>
+          <div class="chart-container chart-tall">
+            <canvas id="language-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">👷 Worker Availability</div>
+              <div class="card-subtitle">Current availability status breakdown</div>
+            </div>
+          </div>
+          <div style="position:relative;height:200px">
+            <canvas id="availability-chart"></canvas>
+          </div>
+          <div class="availability-legend" id="availability-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div> Available</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div> Available Today</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div> Busy</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly trend + Worker Stats -->
+      <div class="section-heading">📋 Detailed Breakdown</div>
+      <div class="grid-2 mb-24">
+
+        <!-- Weekly Messages Bar Chart -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📅 7-Day Message Trend</div>
+              <div class="card-subtitle">Daily message volume this week</div>
+            </div>
+          </div>
+          <div class="chart-container chart-short">
+            <canvas id="weekly-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Worker Dataset Stats -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📊 Worker Dataset Statistics</div>
+              <div class="card-subtitle">Workforce pool details</div>
+            </div>
+          </div>
+          <div id="worker-stats-list" style="margin-top:4px">
+            <div class="stat-row"><span class="stat-row-label">Total Workers in DB</span><span class="stat-row-val" id="ws-total">—</span></div>
+            <div class="stat-row"><span class="stat-row-label">Currently Available</span><span class="stat-row-val text-emerald" id="ws-available">—</span></div>
+            <div class="stat-row"><span class="stat-row-label">Available Today</span><span class="stat-row-val" id="ws-today" style="color:var(--amber-light)">—</span></div>
+            <div class="stat-row"><span class="stat-row-label">Average Rating</span><span class="stat-row-val" id="ws-avg-rating">—</span></div>
+            <div class="stat-row"><span class="stat-row-label">Unique Designations</span><span class="stat-row-val" id="ws-designations">—</span></div>
+            <div class="stat-row"><span class="stat-row-label">Cities Covered</span><span class="stat-row-val" id="ws-cities">—</span></div>
+            <div class="stat-row"><span class="stat-row-label">Avg Hourly Rate</span><span class="stat-row-val text-emerald" id="ws-avg-rate">—</span></div>
+            <div class="stat-row"><span class="stat-row-label">Max Hourly Rate</span><span class="stat-row-val" id="ws-max-rate">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Intents Table -->
+      <div class="section-heading">🎯 Intent Breakdown Table</div>
+      <div class="card mb-24">
+        <div class="card-header">
+          <div class="card-title">All Intents with Volume</div>
+        </div>
+        <div class="table-wrapper" style="border:none">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Intent</th>
+                <th>Count</th>
+                <th>Share</th>
+                <th>Volume Bar</th>
+              </tr>
+            </thead>
+            <tbody id="intent-table-body">
+              <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/analytics.js"></script>
+<script>
+  window.ACTIVE_PAGE = 'analytics';
+
+  let analyticsCharts = {};
+
+  const CHART_OPTS = {
+    tooltip: {
+      backgroundColor: '#1A2235',
+      titleColor: '#F1F5F9',
+      bodyColor: '#94A3B8',
+      borderColor: 'rgba(255,107,53,0.3)',
+      borderWidth: 1,
+    },
+    gridColor: 'rgba(255,255,255,0.04)',
+    tickColor: '#64748B',
+  };
+
+  // ── Load all analytics ────────────────────────────────────────────────────────
+  async function refreshAll() {
+    try {
+      const data = await api.get('/api/analytics/dashboard');
+
+      updateKPIs(data.kpis);
+      buildHourlyChart(data.hourly_messages || []);
+      buildIntentChart(data.intent_distribution || []);
+      buildLanguageChart(data.language_distribution || []);
+      buildAvailabilityChart(data.worker_stats);
+      buildWeeklyChart(data.weekly_messages || []);
+      updateWorkerStats(data.worker_stats);
+      buildIntentTable(data.intent_distribution || []);
+
+      document.getElementById('last-refreshed').textContent =
+        '✅ Last updated: ' + new Date().toLocaleTimeString('en-IN');
+
+    } catch (e) {
+      showToast('Analytics load failed: ' + e.message, 'error');
+      document.getElementById('last-refreshed').textContent = '❌ Failed to load — is the backend running?';
+    }
+  }
+
+  // ── KPIs ──────────────────────────────────────────────────────────────────────
+  function updateKPIs(kpis) {
+    if (!kpis) return;
+    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+    el('kpi-conversations',  formatNumber(kpis.total_conversations));
+    el('kpi-messages',       formatNumber(kpis.total_messages));
+    el('kpi-workers',        formatNumber(kpis.total_workers));
+    el('kpi-response-time',  (kpis.avg_response_time_ms || 0) + 'ms');
+    el('kpi-satisfaction',   (kpis.satisfaction_rate || 0) + '%');
+    el('kpi-gmv-month',      '₹' + formatNumber(kpis.gmv_month_inr || 0));
+    el('kpi-today-conv',     '+' + (kpis.today_conversations || 0) + ' today');
+    el('kpi-today-msg',      '+' + (kpis.today_messages || 0) + ' today');
+    el('kpi-available',      formatNumber(kpis.available_workers || 0) + ' available');
+    el('kpi-gmv-today',      '₹' + formatNumber(kpis.gmv_today_inr || 0) + ' today');
+  }
+
+  // ── Hourly Chart ──────────────────────────────────────────────────────────────
+  function buildHourlyChart(hourlyData) {
+    const ctx = document.getElementById('hourly-chart');
+    if (!ctx || !window.Chart) return;
+    if (analyticsCharts.hourly) analyticsCharts.hourly.destroy();
+
+    const labels = hourlyData.length
+      ? hourlyData.map(d => d.hour)
+      : Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2,'0')}:00`);
+    const values = hourlyData.length
+      ? hourlyData.map(d => d.messages)
+      : Array(24).fill(0);
+
+    analyticsCharts.hourly = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Messages',
+          data: values,
+          borderColor: '#FF6B35',
+          backgroundColor: 'rgba(255,107,53,0.08)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointBackgroundColor: '#FF6B35',
+          pointHoverRadius: 6,
+          borderWidth: 2,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: CHART_OPTS.tooltip },
+        scales: {
+          x: { ticks: { color: CHART_OPTS.tickColor, maxTicksLimit: 8 }, grid: { color: CHART_OPTS.gridColor } },
+          y: { ticks: { color: CHART_OPTS.tickColor }, grid: { color: CHART_OPTS.gridColor }, beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  // ── Intent Doughnut ───────────────────────────────────────────────────────────
+  function buildIntentChart(intents) {
+    const ctx = document.getElementById('intent-chart');
+    if (!ctx || !window.Chart) return;
+    if (analyticsCharts.intent) analyticsCharts.intent.destroy();
+
+    if (!intents.length) {
+      ctx.parentElement.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">No intent data yet</p>';
+      return;
+    }
+
+    const COLORS = ['#FF6B35','#2563EB','#059669','#D97706','#DC2626','#7C3AED','#0891B2','#64748B','#F59E0B','#10B981'];
+
+    analyticsCharts.intent = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: intents.map(i => (i.intent || '').replace(/_/g, ' ')),
+        datasets: [{
+          data: intents.map(i => i.count),
+          backgroundColor: COLORS.slice(0, intents.length),
+          borderWidth: 0,
+          hoverOffset: 10,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#94A3B8', font: { size: 11 }, padding: 10, usePointStyle: true, boxWidth: 8 },
+          },
+          tooltip: CHART_OPTS.tooltip,
+        },
+      },
+    });
+  }
+
+  // ── Language Bar Chart ────────────────────────────────────────────────────────
+  function buildLanguageChart(languages) {
+    const ctx = document.getElementById('language-chart');
+    if (!ctx || !window.Chart) return;
+    if (analyticsCharts.language) analyticsCharts.language.destroy();
+
+    const LANG_NAMES = { en:'English', hi:'Hindi', bn:'Bengali', ta:'Tamil', te:'Telugu', mr:'Marathi', gu:'Gujarati', kn:'Kannada', pa:'Punjabi' };
+    const COLORS = ['rgba(255,107,53,0.85)','rgba(37,99,235,0.85)','rgba(5,150,105,0.85)','rgba(217,119,6,0.85)','rgba(124,58,237,0.85)','rgba(8,145,178,0.85)','rgba(220,38,38,0.85)','rgba(100,116,139,0.85)','rgba(240,171,252,0.85)'];
+
+    analyticsCharts.language = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: languages.map(l => LANG_NAMES[l.language] || l.language),
+        datasets: [{
+          label: 'Conversations',
+          data: languages.map(l => l.count),
+          backgroundColor: COLORS.slice(0, languages.length),
+          borderRadius: 6,
+          borderWidth: 0,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: CHART_OPTS.tooltip },
+        scales: {
+          x: { ticks: { color: CHART_OPTS.tickColor }, grid: { display: false } },
+          y: { ticks: { color: CHART_OPTS.tickColor }, grid: { color: CHART_OPTS.gridColor }, beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  // ── Availability Pie ──────────────────────────────────────────────────────────
+  function buildAvailabilityChart(stats) {
+    const ctx = document.getElementById('availability-chart');
+    if (!ctx || !window.Chart) return;
+    if (analyticsCharts.availability) analyticsCharts.availability.destroy();
+
+    const avail   = stats?.available || 0;
+    const today   = stats?.available_today || 0;
+    const busy    = stats?.busy || 0;
+    const total   = avail + today + busy;
+
+    if (total === 0) {
+      ctx.parentElement.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">No worker data yet</p>';
+      return;
+    }
+
+    analyticsCharts.availability = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Available', 'Available Today', 'Busy'],
+        datasets: [{
+          data: [avail, today, busy],
+          backgroundColor: ['rgba(16,185,129,0.85)', 'rgba(245,158,11,0.85)', 'rgba(239,68,68,0.85)'],
+          borderWidth: 0,
+          hoverOffset: 8,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            ...CHART_OPTS.tooltip,
+            callbacks: {
+              label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw / total * 100)}%)`,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  // ── Weekly Bar Chart ──────────────────────────────────────────────────────────
+  function buildWeeklyChart(weeklyData) {
+    const ctx = document.getElementById('weekly-chart');
+    if (!ctx || !window.Chart) return;
+    if (analyticsCharts.weekly) analyticsCharts.weekly.destroy();
+
+    // Generate last 7 days if no data
+    const today = new Date();
+    const fallback = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - (6 - i));
+      return { date: d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }), messages: 0 };
+    });
+
+    const data = weeklyData.length ? weeklyData : fallback;
+
+    analyticsCharts.weekly = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.date || d.day),
+        datasets: [{
+          label: 'Messages',
+          data: data.map(d => d.messages || d.count || 0),
+          backgroundColor: 'rgba(37,99,235,0.7)',
+          borderRadius: 6,
+          borderWidth: 0,
+          hoverBackgroundColor: 'rgba(59,130,246,0.9)',
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: CHART_OPTS.tooltip },
+        scales: {
+          x: { ticks: { color: CHART_OPTS.tickColor }, grid: { display: false } },
+          y: { ticks: { color: CHART_OPTS.tickColor }, grid: { color: CHART_OPTS.gridColor }, beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  // ── Worker Stats List ─────────────────────────────────────────────────────────
+  function updateWorkerStats(stats) {
+    if (!stats) return;
+    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+    el('ws-total',        formatNumber(stats.total        || 0));
+    el('ws-available',    formatNumber(stats.available    || 0));
+    el('ws-today',        formatNumber(stats.available_today || 0));
+    el('ws-avg-rating',   (stats.avg_rating || 0).toFixed ? (stats.avg_rating || 0).toFixed(1) + ' ★' : stats.avg_rating + ' ★');
+    el('ws-designations', stats.designations || 0);
+    el('ws-cities',       stats.cities       || 0);
+    el('ws-avg-rate',     '₹' + formatNumber(stats.avg_hourly_rate || 0) + '/hr');
+    el('ws-max-rate',     '₹' + formatNumber(stats.max_hourly_rate || 0) + '/hr');
+  }
+
+  // ── Intent Table ──────────────────────────────────────────────────────────────
+  function buildIntentTable(intents) {
+    const tbody = document.getElementById('intent-table-body');
+    if (!intents.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">No intent data yet. Start chatting.</td></tr>';
+      return;
+    }
+
+    const total = intents.reduce((a, i) => a + (i.count || 0), 0);
+    const COLORS = ['#FF6B35','#2563EB','#059669','#D97706','#DC2626','#7C3AED','#0891B2','#64748B'];
+
+    tbody.innerHTML = intents.map((item, idx) => {
+      const pct = total > 0 ? Math.round(item.count / total * 100) : 0;
+      return `
+        <tr>
+          <td style="color:var(--text-muted);font-size:13px">${idx + 1}</td>
+          <td>
+            <span class="badge badge-info" style="text-transform:capitalize">
+              ${(item.intent || 'unknown').replace(/_/g,' ')}
+            </span>
+          </td>
+          <td><strong>${item.count || 0}</strong></td>
+          <td style="color:var(--text-secondary)">${pct}%</td>
+          <td style="min-width:120px">
+            <div class="progress-bar" style="width:100%;max-width:180px">
+              <div class="progress-fill" style="width:${pct}%;background:${COLORS[idx % COLORS.length]}"></div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    buildSidebar('analytics');
+    buildTopbar('📈 Analytics', 'Platform Insights');
+    refreshAll();
+    setInterval(refreshAll, 30000);
+  });
+</script>
+</body>
+</html>

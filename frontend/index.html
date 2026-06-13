@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sahayak — BlueCollar AI Dashboard</title>
+  <meta name="description" content="AI-powered platform for blue-collar workers across India">
+  <meta name="theme-color" content="#FF6B35">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="page-body">
+      <!-- KPI Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <!-- Skeleton -->
+        <div class="stat-card saffron">
+          <div class="stat-icon saffron">💬</div>
+          <div class="stat-info">
+            <div class="stat-value" id="kpi-total-conv">—</div>
+            <div class="stat-label">Total Conversations</div>
+            <div class="stat-change up" id="kpi-today-conv-change">+0 today</div>
+          </div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">📨</div>
+          <div class="stat-info">
+            <div class="stat-value" id="kpi-total-msg">—</div>
+            <div class="stat-label">Messages Processed</div>
+            <div class="stat-change up" id="kpi-today-msg-change">+0 today</div>
+          </div>
+        </div>
+        <div class="stat-card emerald">
+          <div class="stat-icon emerald">👷</div>
+          <div class="stat-info">
+            <div class="stat-value" id="kpi-workers">—</div>
+            <div class="stat-label">Verified Workers</div>
+            <div class="stat-change up" id="kpi-available-change">— available</div>
+          </div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-icon amber">⚡</div>
+          <div class="stat-info">
+            <div class="stat-value" id="kpi-response">—</div>
+            <div class="stat-label">Avg Response Time</div>
+            <div class="stat-change up">LLM + RAG</div>
+          </div>
+        </div>
+        <div class="stat-card ruby">
+          <div class="stat-icon ruby">😊</div>
+          <div class="stat-info">
+            <div class="stat-value" id="kpi-satisfaction">—</div>
+            <div class="stat-label">Satisfaction Rate</div>
+            <div class="stat-change up">Feedback score</div>
+          </div>
+        </div>
+        <div class="stat-card emerald">
+          <div class="stat-icon emerald">💰</div>
+          <div class="stat-info">
+            <div class="stat-value" id="kpi-gmv">—</div>
+            <div class="stat-label">GMV This Month</div>
+            <div class="stat-change up">Estimated value</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid-2 mb-24">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📈 Message Trend (24h)</div>
+              <div class="card-subtitle">Hourly chat volume today</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+          </div>
+          <div class="chart-container">
+            <canvas id="hourly-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🎯 Intent Distribution</div>
+              <div class="card-subtitle">What users are asking about</div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="intent-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row -->
+      <div class="grid-2 mb-24">
+        <!-- Language Distribution -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🌐 Language Distribution</div>
+              <div class="card-subtitle">Conversations by language</div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="language-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚡ Quick Actions</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <a href="/chat.html" class="btn btn-primary" style="justify-content:center">
+              💬 Open AI Chat
+            </a>
+            <a href="/workers.html" class="btn btn-secondary" style="justify-content:center">
+              👷 Browse Workers
+            </a>
+            <a href="/jobs.html" class="btn btn-secondary" style="justify-content:center">
+              💼 Job Postings
+            </a>
+            <button class="btn btn-secondary" onclick="loadDashboard()" style="justify-content:center">
+              📊 Refresh Analytics
+            </button>
+            <a href="/disputes.html" class="btn btn-ghost" style="justify-content:center">
+              ⚖️ Manage Disputes
+            </a>
+            <a href="/settings.html" class="btn btn-ghost" style="justify-content:center">
+              ⚙️ Settings & Config
+            </a>
+          </div>
+
+          <!-- System Status -->
+          <div style="margin-top:20px">
+            <div class="card-title" style="font-size:13px;margin-bottom:12px">System Status</div>
+            <div id="system-status">
+              <div class="session-stat">
+                <span class="session-stat-label">Database</span>
+                <span class="session-stat-value text-emerald" id="status-db">Checking...</span>
+              </div>
+              <div class="session-stat">
+                <span class="session-stat-label">Redis Cache</span>
+                <span class="session-stat-value" id="status-redis">Checking...</span>
+              </div>
+              <div class="session-stat">
+                <span class="session-stat-label">Groq LLM</span>
+                <span class="session-stat-value" id="status-llm">Checking...</span>
+              </div>
+              <div class="session-stat">
+                <span class="session-stat-label">Gemini Vision</span>
+                <span class="session-stat-value" id="status-vision">Checking...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Sessions -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🕐 Recent Sessions</div>
+            <div class="card-subtitle">Latest conversation sessions</div>
+          </div>
+          <a href="/sessions.html" class="btn btn-ghost btn-sm">View All →</a>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Session ID</th>
+                <th>Language</th>
+                <th>Intent</th>
+                <th>Messages</th>
+                <th>Channel</th>
+                <th>Last Active</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-table">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Loading sessions...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/analytics.js"></script>
+<script>
+  window.ACTIVE_PAGE = 'dashboard';
+
+  async function loadDashboard() {
+    // Load analytics charts
+    await loadAnalytics();
+
+    // Load recent sessions
+    try {
+      const sessData = await api.get('/api/analytics/sessions/recent?limit=5');
+      const tbody = document.getElementById('sessions-table');
+      if (sessData.sessions && sessData.sessions.length) {
+        tbody.innerHTML = sessData.sessions.map(s => `
+          <tr>
+            <td><code style="font-size:12px;color:var(--saffron)">${s.session_id.slice(0, 16)}...</code></td>
+            <td>${s.language || 'en'}</td>
+            <td>${s.intent_summary ? `<span class="badge badge-info">${s.intent_summary.replace('_',' ')}</span>` : '-'}</td>
+            <td>${s.message_count || 0}</td>
+            <td>${s.channel || 'web'}</td>
+            <td>${timeAgo(s.updated_at)}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">No sessions yet. <a href="/chat.html" style="color:var(--saffron)">Start a chat →</a></td></tr>`;
+      }
+    } catch (e) {}
+
+    // Load system health
+    try {
+      const health = await api.get('/health');
+      const setStatus = (id, value, okText = 'ok') => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const isOk = value === okText || value === 'configured' || value === 'ok';
+        el.textContent = isOk ? '✅ Online' : (value === 'not_configured' ? '⚙️ Not configured' : '❌ Error');
+        el.style.color = isOk ? 'var(--emerald-light)' : value === 'not_configured' ? 'var(--amber-light)' : 'var(--ruby-light)';
+      };
+      setStatus('status-db', health.services.database);
+      setStatus('status-redis', health.services.redis);
+      setStatus('status-llm', health.services.llm_groq, 'configured');
+      setStatus('status-vision', health.services.llm_gemini, 'configured');
+    } catch (e) {
+      ['status-db','status-redis','status-llm','status-vision'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = '⚠️ Check backend'; el.style.color = 'var(--amber-light)'; }
+      });
+    }
+
+    // Update KPI extra fields
+    try {
+      const data = await api.get('/api/analytics/dashboard');
+      document.getElementById('kpi-today-conv-change').textContent = `+${data.kpis.today_conversations} today`;
+      document.getElementById('kpi-today-msg-change').textContent = `+${data.kpis.today_messages} today`;
+      document.getElementById('kpi-available-change').textContent = `${data.kpis.available_workers} available`;
+    } catch (e) {}
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    buildSidebar('dashboard');
+    buildTopbar('Dashboard', 'Overview');
+    loadDashboard();
+    // Auto-refresh every 30s
+    setInterval(loadDashboard, 30000);
+  });
+</script>
+</body>
+</html>

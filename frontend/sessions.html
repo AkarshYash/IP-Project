@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sahayak — Sessions</title>
+  <meta name="description" content="Conversation Sessions Management">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-bar .search-bar { flex: 1; min-width: 200px; }
+    .filter-bar select { width: 150px; }
+
+    .session-row { cursor: pointer; transition: background 0.15s; }
+    .session-row:hover td { background: rgba(255,107,53,0.05); }
+    .session-row.selected td { background: rgba(255,107,53,0.08); }
+
+    /* Split-panel layout when message panel is open */
+    .sessions-layout { display: flex; gap: 20px; align-items: flex-start; }
+    .sessions-table-wrap { flex: 1; min-width: 0; }
+    .message-panel {
+      width: 380px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 84px;
+      max-height: calc(100vh - 100px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      animation: slideInRight 0.25s ease;
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .message-panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: var(--bg-surface, #111827);
+    }
+    .message-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .msg-bubble {
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      max-width: 100%;
+    }
+    .msg-bubble.user {
+      background: var(--saffron-glow);
+      border: 1px solid rgba(255,107,53,0.2);
+      align-self: flex-end;
+    }
+    .msg-bubble.assistant {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+    }
+    .msg-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .stat-strip {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 120px;
+    }
+    .stat-chip-icon { font-size: 20px; }
+    .stat-chip-val { font-size: 20px; font-weight: 700; font-family: 'Poppins', sans-serif; }
+    .stat-chip-label { font-size: 11px; color: var(--text-muted); }
+
+    @media (max-width: 900px) {
+      .sessions-layout { flex-direction: column; }
+      .message-panel { width: 100%; position: static; max-height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main-content">
+    <header class="topbar" id="topbar"></header>
+    <div class="page-body">
+
+      <!-- Stats strip -->
+      <div class="stat-strip" id="stat-strip">
+        <div class="stat-chip">
+          <div class="stat-chip-icon">📋</div>
+          <div>
+            <div class="stat-chip-val" id="stat-total">—</div>
+            <div class="stat-chip-label">Total Sessions</div>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon">📨</div>
+          <div>
+            <div class="stat-chip-val" id="stat-msgs">—</div>
+            <div class="stat-chip-label">Total Messages</div>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon">🌐</div>
+          <div>
+            <div class="stat-chip-val" id="stat-langs">—</div>
+            <div class="stat-chip-label">Languages Used</div>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon">📱</div>
+          <div>
+            <div class="stat-chip-val" id="stat-channels">—</div>
+            <div class="stat-chip-label">Channels Active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="session-search" placeholder="Search by session ID, intent, language..." oninput="filterSessions(this.value)">
+        </div>
+        <select class="select" id="filter-channel" onchange="applyFilters()" style="width:140px">
+          <option value="">All Channels</option>
+          <option value="web">Web</option>
+          <option value="telegram">Telegram</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="api">API</option>
+        </select>
+        <select class="select" id="filter-lang" onchange="applyFilters()" style="width:140px">
+          <option value="">All Languages</option>
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+          <option value="bn">Bengali</option>
+          <option value="ta">Tamil</option>
+          <option value="te">Telugu</option>
+          <option value="mr">Marathi</option>
+          <option value="gu">Gujarati</option>
+          <option value="kn">Kannada</option>
+          <option value="pa">Punjabi</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="loadSessions()">↻ Refresh</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇️ Export CSV</button>
+      </div>
+
+      <!-- Split layout: table + message panel -->
+      <div class="sessions-layout">
+
+        <!-- Table -->
+        <div class="sessions-table-wrap">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="table-wrapper" style="border:none;border-radius:0">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Session ID</th>
+                    <th>Language</th>
+                    <th>Intent</th>
+                    <th>Messages</th>
+                    <th>Channel</th>
+                    <th>Created</th>
+                    <th>Last Active</th>
+                  </tr>
+                </thead>
+                <tbody id="sessions-tbody">
+                  <tr>
+                    <td colspan="7" style="text-align:center;padding:40px">
+                      <div class="spinner"></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="pagination" class="pagination" style="padding:16px 20px"></div>
+          </div>
+        </div>
+
+        <!-- Message side panel (shown on row click) -->
+        <div class="message-panel" id="message-panel" style="display:none">
+          <div class="message-panel-header">
+            <div>
+              <div style="font-weight:700;font-size:14px;color:var(--text-primary)" id="panel-session-id">Session</div>
+              <div style="font-size:12px;color:var(--text-muted)" id="panel-session-meta"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="closePanel()" style="padding:6px 10px">✕</button>
+          </div>
+          <div class="message-panel-body" id="panel-messages">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+      </div><!-- /sessions-layout -->
+    </div>
+  </main>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="/static/js/app.js"></script>
+<script>
+  window.ACTIVE_PAGE = 'sessions';
+
+  const LANG_NAMES = {
+    en:'English', hi:'Hindi', bn:'Bengali', ta:'Tamil',
+    te:'Telugu', mr:'Marathi', gu:'Gujarati', kn:'Kannada', pa:'Punjabi'
+  };
+
+  let allSessions = [];
+  let currentPage = 1;
+  const PAGE_SIZE = 20;
+  let selectedSessionId = null;
+
+  // ── Load sessions ────────────────────────────────────────────────────────────
+  async function loadSessions(page = 1) {
+    currentPage = page;
+    const tbody = document.getElementById('sessions-tbody');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px"><div class="spinner"></div></td></tr>';
+
+    try {
+      const offset = (page - 1) * PAGE_SIZE;
+      const data = await api.get(`/api/analytics/sessions/recent?limit=${PAGE_SIZE}&offset=${offset}`);
+      allSessions = data.sessions || [];
+      updateStats(allSessions, data.total);
+      renderSessions(allSessions);
+      renderPagination(data.total || allSessions.length, page);
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--ruby-light);padding:30px">
+        ❌ Error loading sessions: ${e.message}
+        <br><a href="/chat.html" style="color:var(--saffron);font-size:13px">Start a chat first →</a>
+      </td></tr>`;
+    }
+  }
+
+  // ── Render table rows ────────────────────────────────────────────────────────
+  function renderSessions(sessions) {
+    const tbody = document.getElementById('sessions-tbody');
+    if (!sessions.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px">
+        No sessions found. <a href="/chat.html" style="color:var(--saffron)">Start a chat →</a>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = sessions.map(s => `
+      <tr class="session-row ${selectedSessionId === s.session_id ? 'selected' : ''}"
+          onclick="viewSession('${s.session_id}', this)"
+          id="row-${s.session_id.replace(/[^a-z0-9]/gi,'_')}">
+        <td>
+          <code style="font-size:11px;color:var(--saffron)" title="${s.session_id}">
+            ${s.session_id.slice(0, 18)}…
+          </code>
+        </td>
+        <td>
+          <span style="display:flex;align-items:center;gap:5px">
+            🌐 ${LANG_NAMES[s.language] || s.language || 'en'}
+          </span>
+        </td>
+        <td>
+          ${s.intent_summary
+            ? `<span class="badge badge-info">${s.intent_summary.replace(/_/g,' ')}</span>`
+            : '<span class="text-muted text-xs">—</span>'}
+        </td>
+        <td>
+          <span style="font-weight:600">${s.message_count || 0}</span>
+          <span class="text-muted text-xs"> msgs</span>
+        </td>
+        <td><span class="badge badge-default">${s.channel || 'web'}</span></td>
+        <td style="font-size:12px;color:var(--text-secondary)">${formatDate(s.created_at)}</td>
+        <td style="font-size:12px;color:var(--text-secondary)">${timeAgo(s.updated_at)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // ── View session messages in side panel ─────────────────────────────────────
+  async function viewSession(sessionId, rowEl) {
+    // Deselect previous
+    document.querySelectorAll('.session-row.selected').forEach(r => r.classList.remove('selected'));
+    if (rowEl) rowEl.classList.add('selected');
+    selectedSessionId = sessionId;
+
+    const panel = document.getElementById('message-panel');
+    const panelMsgs = document.getElementById('panel-messages');
+    const panelId = document.getElementById('panel-session-id');
+    const panelMeta = document.getElementById('panel-session-meta');
+
+    panel.style.display = 'flex';
+    panelMsgs.innerHTML = '<div class="spinner"></div>';
+    panelId.textContent = `Session: ${sessionId.slice(0, 20)}…`;
+    panelMeta.textContent = 'Loading messages…';
+
+    try {
+      const data = await api.get(`/api/conversations/${sessionId}/messages`);
+      const msgs = data.messages || [];
+
+      panelMeta.textContent = `${msgs.length} messages · ${data.language || ''} · ${data.channel || 'web'}`;
+
+      if (!msgs.length) {
+        panelMsgs.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px">No messages in this session.</p>';
+        return;
+      }
+
+      panelMsgs.innerHTML = msgs.map(m => {
+        const isUser = m.role === 'user';
+        return `
+          <div class="msg-bubble ${isUser ? 'user' : 'assistant'}">
+            <div class="msg-meta">
+              <span>${isUser ? '👤 User' : '🤖 Sahayak'}</span>
+              <span>·</span>
+              <span>${formatTime(m.created_at)}</span>
+              ${m.intent ? `<span class="badge badge-info" style="font-size:10px">${m.intent.replace(/_/g,' ')}</span>` : ''}
+              ${m.language ? `<span style="font-size:10px;color:var(--text-muted)">🌐 ${LANG_NAMES[m.language] || m.language}</span>` : ''}
+            </div>
+            <div style="color:var(--text-primary);word-break:break-word">${escapeHtml(m.content)}</div>
+            ${m.response_time_ms ? `<div style="font-size:10px;color:var(--text-muted);margin-top:4px">⚡ ${m.response_time_ms}ms</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      // Scroll to bottom
+      panelMsgs.scrollTop = panelMsgs.scrollHeight;
+
+    } catch (e) {
+      panelMsgs.innerHTML = `<p style="color:var(--ruby-light);text-align:center;padding:20px">❌ ${e.message}</p>`;
+    }
+  }
+
+  function closePanel() {
+    document.getElementById('message-panel').style.display = 'none';
+    selectedSessionId = null;
+    document.querySelectorAll('.session-row.selected').forEach(r => r.classList.remove('selected'));
+  }
+
+  // ── Filters ──────────────────────────────────────────────────────────────────
+  function applyFilters() {
+    const search = document.getElementById('session-search').value.toLowerCase();
+    const channel = document.getElementById('filter-channel').value;
+    const lang = document.getElementById('filter-lang').value;
+
+    const filtered = allSessions.filter(s => {
+      const matchSearch = !search ||
+        s.session_id.toLowerCase().includes(search) ||
+        (s.intent_summary || '').toLowerCase().includes(search) ||
+        (s.language || '').toLowerCase().includes(search);
+      const matchChannel = !channel || (s.channel || 'web') === channel;
+      const matchLang = !lang || s.language === lang;
+      return matchSearch && matchChannel && matchLang;
+    });
+
+    renderSessions(filtered);
+  }
+
+  function filterSessions(query) { applyFilters(); }
+
+  // ── Stats ────────────────────────────────────────────────────────────────────
+  function updateStats(sessions, total) {
+    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+    el('stat-total', formatNumber(total || sessions.length));
+    const totalMsgs = sessions.reduce((a, s) => a + (s.message_count || 0), 0);
+    el('stat-msgs', formatNumber(totalMsgs));
+    const langs = new Set(sessions.map(s => s.language).filter(Boolean));
+    el('stat-langs', langs.size || '—');
+    const channels = new Set(sessions.map(s => s.channel || 'web').filter(Boolean));
+    el('stat-channels', channels.size || '—');
+  }
+
+  // ── Pagination ───────────────────────────────────────────────────────────────
+  function renderPagination(total, current) {
+    const pages = Math.ceil(total / PAGE_SIZE);
+    if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+
+    let html = '';
+    const start = Math.max(1, current - 2);
+    const end = Math.min(pages, current + 2);
+
+    if (start > 1) html += `<button class="page-btn" onclick="loadSessions(1)">1</button>`;
+    if (start > 2) html += `<span style="color:var(--text-muted);padding:0 4px">…</span>`;
+
+    for (let i = start; i <= end; i++) {
+      html += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="loadSessions(${i})">${i}</button>`;
+    }
+
+    if (end < pages - 1) html += `<span style="color:var(--text-muted);padding:0 4px">…</span>`;
+    if (end < pages) html += `<button class="page-btn" onclick="loadSessions(${pages})">${pages}</button>`;
+
+    document.getElementById('pagination').innerHTML = html;
+  }
+
+  // ── Export CSV ───────────────────────────────────────────────────────────────
+  function exportCSV() {
+    if (!allSessions.length) { showToast('No sessions to export', 'warning'); return; }
+
+    const headers = ['session_id', 'language', 'intent', 'message_count', 'channel', 'created_at', 'updated_at'];
+    const rows = allSessions.map(s => [
+      s.session_id,
+      s.language || 'en',
+      s.intent_summary || '',
+      s.message_count || 0,
+      s.channel || 'web',
+      s.created_at || '',
+      s.updated_at || ''
+    ]);
+
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sahayak_sessions_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${allSessions.length} sessions`, 'success');
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    buildSidebar('sessions');
+    buildTopbar('📋 Sessions', 'Conversation History');
+    loadSessions();
+  });
+</script>
+</body>
+</html>
