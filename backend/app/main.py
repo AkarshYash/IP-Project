@@ -76,3 +76,10 @@ async def health():
     """Health check endpoint"""
     return {"status": "ok", "service": "sahayak-api"}
 
+
+# For Render.com health checks
+@app.get("/ping")
+async def ping():
+    """Ping endpoint for health monitoring"""
+    return {"ping": "pong"}
+
