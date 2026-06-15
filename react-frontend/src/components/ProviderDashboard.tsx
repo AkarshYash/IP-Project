@@ -296,9 +296,8 @@ export default function ProviderDashboard() {
                           </motion.button>
                         )}
                       </div>
-                    </div>
-                  </motion.div>
-                </Tilt>
+                    </motion.div>
+                  </Tilt>
               );
             })}
           </div>

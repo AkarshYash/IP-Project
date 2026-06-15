@@ -335,8 +335,8 @@ export default function ChatWindow({ isOpen, onClose, workerName }: ChatWindowPr
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               ))}
             </div>
 

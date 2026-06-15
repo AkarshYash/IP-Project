@@ -106,7 +106,7 @@ function App() {
               >
                 <Search className="w-4 h-4" />
                 {t('job_provider')}
-              </button>
+              </motion.button>
               <motion.button 
                 onClick={() => setRole('worker')}
                 whileHover={{ scale: 1.05 }}
@@ -120,7 +120,7 @@ function App() {
               >
                 <User className="w-4 h-4" />
                 {t('worker')}
-              </button>
+              </motion.button>
             </motion.div>
 
             <motion.div 
@@ -135,7 +135,7 @@ function App() {
               >
                 <Globe className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase">{i18n.language}</span>
-              </button>
+              </motion.button>
               
               <motion.div 
                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -160,7 +160,7 @@ function App() {
                     {lang.label}
                   </button>
                 ))}
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </header>
