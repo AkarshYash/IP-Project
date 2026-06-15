@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Search, Star, MapPin, ShieldCheck, Loader2, MessageSquare } from "lucide-react";
-import { motion } from "framer-motion";
-import Tilt from "react-parallax-tilt";
 import axios from "axios";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { motion } from "framer-motion";
 import L from 'leaflet';
+import { Loader2, MapPin, MessageSquare, Search, ShieldCheck, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import Tilt from "react-parallax-tilt";
 import ChatWindow from "./ChatWindow";
 
 // Fix for default leaflet marker icon in React
@@ -114,19 +114,29 @@ export default function ProviderDashboard() {
         </div>
       </div>
 
-      {/* Global Search Bar */}
-      <div className="relative group">
-        <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-          <Search className="h-6 w-6 text-[#A1A1A1] group-focus-within:text-white transition-colors" />
-        </div>
-        <input 
-          type="text" 
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('search_placeholder')}
-          className="w-full bg-[#111111] border border-white/[0.05] text-white rounded-full py-6 pl-16 pr-6 text-lg focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/20 transition-all placeholder:text-[#666666] shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+      {/* Enhanced 3D Search Bar */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative group"
+      >
+        <motion.div 
+          whileHover={{ scale: 1.02 }}
+          className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
         />
-      </div>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none z-10">
+            <Search className="h-6 w-6 text-[#A1A1A1] group-focus-within:text-blue-400 transition-colors" />
+          </div>
+          <input 
+            type="text" 
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('search_placeholder')}
+            className="relative w-full bg-[#111111]/80 backdrop-blur-xl border border-white/[0.08] text-white rounded-full py-6 pl-16 pr-6 text-lg focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all placeholder:text-[#666666] shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+          />
+        </div>
+      </motion.div>
 
       {/* Radar / Map Bento Box */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[400px]">
@@ -197,36 +207,49 @@ export default function ProviderDashboard() {
               const isBooked = bookedWorkers.has(worker.id);
               
               return (
-                <Tilt
-                  key={worker.id}
-                  tiltMaxAngleX={15}
-                  tiltMaxAngleY={15}
-                  perspective={1000}
-                  transitionSpeed={1000}
-                  glareEnable={true}
-                  glareMaxOpacity={0.1}
-                  glareColor="#ffffff"
-                  glarePosition="all"
-                >
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 * index }}
-                    className="bg-[#111111] border border-white/[0.05] rounded-3xl p-6 hover:bg-[#161616] transition-colors group h-full flex flex-col justify-between shadow-xl"
+                  <Tilt
+                    key={worker.id}
+                    tiltMaxAngleX={15}
+                    tiltMaxAngleY={15}
+                    perspective={1000}
+                    transitionSpeed={1000}
+                    glareEnable={true}
+                    glareMaxOpacity={0.15}
+                    glareColor="#8b5cf6"
+                    glarePosition="all"
                   >
-                    <div>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 * index }}
+                      whileHover={{ 
+                        y: -10,
+                        boxShadow: "0 20px 40px rgba(139,92,246,0.3)"
+                      }}
+                      className="bg-gradient-to-br from-[#111111] to-[#0A0A0A] border border-white/[0.08] rounded-3xl p-6 hover:bg-[#161616] hover:border-white/[0.15] transition-all group h-full flex flex-col justify-between shadow-xl backdrop-blur-xl relative overflow-hidden"
+                    >
+                      {/* Gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                      
+                      <div className="relative z-10">
                       <div className="flex items-start justify-between mb-6">
-                        <div className="w-16 h-16 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden">
+                        <motion.div 
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border-2 border-white/10 flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]"
+                        >
                           {worker.avatar ? (
                             <img src={worker.avatar} alt={worker.name} className="w-full h-full object-cover" />
                           ) : (
-                            <span className="text-2xl font-bold text-white">{worker.name.charAt(0)}</span>
+                            <span className="text-2xl font-bold bg-gradient-to-br from-white to-blue-200 bg-clip-text text-transparent">{worker.name.charAt(0)}</span>
                           )}
-                        </div>
-                        <div className="bg-white/5 border border-white/10 px-3 py-1 rounded-full flex items-center gap-1.5 text-sm text-white font-medium backdrop-blur-md">
-                          <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
+                        </motion.div>
+                        <motion.div 
+                          whileHover={{ scale: 1.1 }}
+                          className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 text-sm text-yellow-400 font-medium shadow-[0_0_15px_rgba(234,179,8,0.2)]"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]" />
                           {worker.rating.toFixed(1)}
-                        </div>
+                        </motion.div>
                       </div>
                       
                       <div className="mb-4">
@@ -244,27 +267,35 @@ export default function ProviderDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-end justify-between pt-6 border-t border-white/[0.05]">
-                      <div>
-                        <p className="text-[11px] text-[#A1A1A1] font-semibold uppercase tracking-wider mb-1">{t('est_rate')}</p>
-                        <p className="font-black text-xl text-white">₹{worker.price}</p>
+                      <div className="flex items-end justify-between pt-6 border-t border-white/[0.08]">
+                        <div>
+                          <p className="text-[11px] text-[#A1A1A1] font-semibold uppercase tracking-wider mb-1">{t('est_rate')}</p>
+                          <p className="font-black text-xl bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">₹{worker.price}</p>
+                        </div>
+                        
+                        {isBooked ? (
+                          <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => openChat(worker)}
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-sm px-5 py-2.5 rounded-full shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:shadow-[0_6px_30px_rgba(16,185,129,0.6)] transition-all flex items-center gap-2"
+                          >
+                            <MessageSquare className="w-4 h-4" /> {t('message')}
+                          </motion.button>
+                        ) : (
+                          <motion.button 
+                            whileHover={{ 
+                              scale: 1.05,
+                              boxShadow: "0 6px 30px rgba(59,130,246,0.5)"
+                            }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleHire(worker)}
+                            className="bg-gradient-to-r from-white to-blue-100 text-black font-bold text-sm px-5 py-2.5 rounded-full shadow-[0_4px_20px_rgba(255,255,255,0.3)] hover:from-blue-500 hover:to-purple-500 hover:text-white transition-all"
+                          >
+                            {t('hire_now')}
+                          </motion.button>
+                        )}
                       </div>
-                      
-                      {isBooked ? (
-                        <button 
-                          onClick={() => openChat(worker)}
-                          className="bg-emerald-600 text-white font-bold text-sm px-5 py-2.5 rounded-full shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2"
-                        >
-                          <MessageSquare className="w-4 h-4" /> {t('message')}
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => handleHire(worker)}
-                          className="bg-white text-black font-bold text-sm px-5 py-2.5 rounded-full shadow-lg hover:bg-blue-500 hover:text-white transition-colors"
-                        >
-                          {t('hire_now')}
-                        </button>
-                      )}
                     </div>
                   </motion.div>
                 </Tilt>

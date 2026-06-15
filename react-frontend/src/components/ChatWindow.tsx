@@ -111,22 +111,56 @@ export default function ChatWindow({ isOpen, onClose, workerName }: ChatWindowPr
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="w-full md:max-w-2xl mx-auto h-[100dvh] md:h-[80vh] bg-[#111111] shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden md:rounded-3xl border border-white/10 relative"
           >
-            {/* Header */}
-            <div className="px-6 py-4 bg-[#1A1A1A] border-b border-white/5 flex items-center justify-between">
+            {/* Enhanced 3D Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-[#1A1A1A] to-[#151515] border-b border-white/10 flex items-center justify-between backdrop-blur-xl relative">
+              {/* Glow effect */}
+              <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
+              
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                >
                   {workerName.charAt(0)}
-                </div>
+                </motion.div>
                 <div>
                   <h3 className="text-white font-bold">{workerName}</h3>
-                  <p className="text-emerald-400 text-xs font-semibold">Online</p>
+                  <motion.div 
+                    animate={{ opacity: [1, 0.6, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
+                    <p className="text-emerald-400 text-xs font-semibold">Online</p>
+                  </motion.div>
                 </div>
               </div>
               
               <div className="flex items-center gap-3 text-[#A1A1A1]">
-                <button onClick={handleVideoCall} className="hover:text-white transition-colors p-2 bg-white/5 rounded-full hover:bg-blue-600/20"><Video className="w-4 h-4" /></button>
-                <button onClick={handleVoiceCall} className="hover:text-white transition-colors p-2 bg-white/5 rounded-full hover:bg-emerald-600/20"><Phone className="w-4 h-4" /></button>
-                <button onClick={onClose} className="hover:text-red-400 transition-colors p-2 bg-white/5 rounded-full ml-2"><X className="w-4 h-4" /></button>
+                <motion.button 
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleVideoCall} 
+                  className="hover:text-white transition-colors p-2 bg-white/5 rounded-full hover:bg-blue-600/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-white/10"
+                >
+                  <Video className="w-4 h-4" />
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleVoiceCall} 
+                  className="hover:text-white transition-colors p-2 bg-white/5 rounded-full hover:bg-emerald-600/30 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/10"
+                >
+                  <Phone className="w-4 h-4" />
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onClose} 
+                  className="hover:text-red-400 transition-colors p-2 bg-white/5 rounded-full ml-2 hover:bg-red-600/30 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-white/10"
+                >
+                  <X className="w-4 h-4" />
+                </motion.button>
               </div>
             </div>
 
@@ -247,15 +281,33 @@ export default function ChatWindow({ isOpen, onClose, workerName }: ChatWindowPr
               )}
             </AnimatePresence>
 
-            {/* Messages Area */}
-            <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-4 bg-[#0A0A0A]">
-              <div className="text-center text-xs text-[#666666] my-4 font-semibold uppercase tracking-widest">
-                Connected Securely
-              </div>
+            {/* Messages Area with 3D Scroll Effects */}
+            <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-4 bg-gradient-to-b from-[#0A0A0A] via-[#0F0F0F] to-[#0A0A0A] relative">
+              {/* Ambient light effect */}
+              <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-purple-500/5 to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-blue-500/5 to-transparent pointer-events-none" />
+              
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-center text-xs text-[#666666] my-4 font-semibold uppercase tracking-widest relative"
+              >
+                <div className="absolute inset-x-0 top-1/2 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                <span className="relative bg-[#0A0A0A] px-4">Connected Securely</span>
+              </motion.div>
               
               {messages.map((msg, idx) => (
-                <div key={idx} className={`flex ${msg.isSelf ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`px-5 py-3 rounded-2xl max-w-[80%] ${msg.isSelf ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-[#1A1A1A] text-[#EDEDED] border border-white/5 rounded-tl-sm'}`}>
+                <motion.div 
+                  key={idx} 
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={`flex ${msg.isSelf ? 'justify-end' : 'justify-start'}`}
+                >
+                  <motion.div 
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className={`px-5 py-3 rounded-2xl max-w-[80%] backdrop-blur-xl ${msg.isSelf ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-tr-sm shadow-[0_8px_30px_rgba(37,99,235,0.3)]' : 'bg-[#1A1A1A]/80 text-[#EDEDED] border border-white/10 rounded-tl-sm shadow-[0_8px_30px_rgba(0,0,0,0.5)]'}`}
+                  >
                     {msg.type === 'text' && (
                       <div>
                         <div>{msg.isSystem ? t(msg.content) : msg.content}</div>
@@ -288,34 +340,60 @@ export default function ChatWindow({ isOpen, onClose, workerName }: ChatWindowPr
               ))}
             </div>
 
-            {/* Input Area */}
-            <div className="p-4 bg-[#1A1A1A] border-t border-white/5 flex items-center gap-3">
-              <button className="p-3 text-[#A1A1A1] hover:text-white bg-white/5 rounded-full transition-colors">
-                <Plus className="w-5 h-5" />
-              </button>
+            {/* Enhanced 3D Input Area */}
+            <div className="p-4 bg-gradient-to-t from-[#1A1A1A] to-[#151515] border-t border-white/10 flex items-center gap-3 backdrop-blur-xl relative">
+              {/* Glow effect on top */}
+              <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
               
-              <div className="flex-1 relative">
+              <motion.button 
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                className="p-3 text-[#A1A1A1] hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-all shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
+              >
+                <Plus className="w-5 h-5" />
+              </motion.button>
+              
+              <div className="flex-1 relative group">
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity"
+                />
                 <input 
                   type="text" 
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Message..." 
-                  className="w-full bg-[#0A0A0A] border border-white/10 text-white rounded-full py-3 pl-5 pr-20 focus:outline-none focus:border-white/20"
+                  className="relative w-full bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/10 text-white rounded-full py-3 pl-5 pr-20 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] placeholder:text-[#666666]"
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3 text-[#A1A1A1]">
                   <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-                  <button onClick={handleCameraClick} title="Send Photo"><Camera className="w-4 h-4 cursor-pointer hover:text-white" /></button>
-                  <button onClick={handleLocationClick} title="Share Location"><MapPin className="w-4 h-4 cursor-pointer hover:text-emerald-400" /></button>
+                  <motion.button 
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleCameraClick} 
+                    title="Send Photo"
+                  >
+                    <Camera className="w-4 h-4 cursor-pointer hover:text-blue-400 transition-colors" />
+                  </motion.button>
+                  <motion.button 
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleLocationClick} 
+                    title="Share Location"
+                  >
+                    <MapPin className="w-4 h-4 cursor-pointer hover:text-emerald-400 transition-colors" />
+                  </motion.button>
                 </div>
               </div>
 
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.1, rotate: -15 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={handleSend}
-                className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30 shrink-0"
+                className="p-3 bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-full hover:from-blue-500 hover:to-blue-400 transition-all shadow-[0_8px_25px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_35px_rgba(37,99,235,0.6)] shrink-0"
               >
                 <Send className="w-5 h-5" />
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         </motion.div>

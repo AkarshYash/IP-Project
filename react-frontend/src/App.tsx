@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Globe, LayoutGrid, Mic, Search, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, User, LayoutGrid, Search, Mic } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from './lib/utils';
-import WorkerDashboard from './components/WorkerDashboard';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import ProviderDashboard from './components/ProviderDashboard';
+import WorkerDashboard from './components/WorkerDashboard';
+import { cn } from './lib/utils';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -24,50 +24,98 @@ function App() {
     <Router>
       <div className="min-h-screen bg-[#0A0A0A] text-[#EDEDED] font-['Inter'] selection:bg-white/20">
         
-        {/* Subtle Noise Texture & Gradients */}
-        <div className="fixed inset-0 pointer-events-none z-0 opacity-40">
-          <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[120px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-600/10 blur-[120px]" />
+        {/* Enhanced 3D Background with Animated Gradients */}
+        <div className="fixed inset-0 pointer-events-none z-0 opacity-50">
+          <motion.div 
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 90, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-pink-600/20 blur-[150px]"
+          />
+          <motion.div 
+            animate={{
+              scale: [1, 1.3, 1],
+              rotate: [0, -90, 0],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-emerald-600/20 via-teal-600/20 to-cyan-600/20 blur-[150px]"
+          />
+          <motion.div 
+            animate={{
+              opacity: [0.3, 0.5, 0.3],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-br from-blue-500/10 via-violet-500/10 to-fuchsia-500/10 blur-[200px]"
+          />
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
         </div>
 
-        {/* Ultra-Minimal Header */}
+        {/* Enhanced 3D Header with Glassmorphism */}
         <header className={cn(
-          "fixed top-0 inset-x-0 z-50 transition-all duration-500",
-          scrolled ? "bg-[#0A0A0A]/80 backdrop-blur-2xl border-b border-white/[0.05] py-4" : "bg-transparent py-6"
+          "fixed top-0 inset-x-0 z-50 transition-all duration-700",
+          scrolled 
+            ? "bg-[#0A0A0A]/70 backdrop-blur-3xl border-b border-white/[0.08] py-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)]" 
+            : "bg-transparent py-6"
         )}>
           <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3"
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center gap-3 cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                <LayoutGrid className="w-4 h-4 text-black" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-white">Sahayak</span>
+              <motion.div 
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+                className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+              >
+                <LayoutGrid className="w-4 h-4 text-white" />
+              </motion.div>
+              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">Sahayak</span>
             </motion.div>
 
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2 p-1 bg-white/[0.03] border border-white/[0.05] rounded-full backdrop-blur-xl"
+              className="flex items-center gap-2 p-1 bg-white/[0.05] border border-white/[0.1] rounded-full backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_32px_rgba(139,92,246,0.2)] transition-all duration-300"
             >
-              <button 
+              <motion.button 
                 onClick={() => setRole('provider')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 className={cn(
                   "px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2",
-                  role === 'provider' ? "bg-white text-black shadow-lg" : "text-[#A1A1A1] hover:text-white"
+                  role === 'provider' 
+                    ? "bg-gradient-to-r from-white to-blue-50 text-black shadow-[0_4px_20px_rgba(255,255,255,0.3)]" 
+                    : "text-[#A1A1A1] hover:text-white hover:bg-white/5"
                 )}
               >
                 <Search className="w-4 h-4" />
                 {t('job_provider')}
               </button>
-              <button 
+              <motion.button 
                 onClick={() => setRole('worker')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 className={cn(
                   "px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2",
-                  role === 'worker' ? "bg-white text-black shadow-lg" : "text-[#A1A1A1] hover:text-white"
+                  role === 'worker' 
+                    ? "bg-gradient-to-r from-white to-blue-50 text-black shadow-[0_4px_20px_rgba(255,255,255,0.3)]" 
+                    : "text-[#A1A1A1] hover:text-white hover:bg-white/5"
                 )}
               >
                 <User className="w-4 h-4" />
@@ -80,14 +128,20 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               className="relative group"
             >
-              <button 
-                className="w-auto px-4 h-10 rounded-full border border-white/[0.08] flex items-center justify-center text-[#A1A1A1] hover:text-white hover:bg-white/[0.05] transition-all gap-2"
+              <motion.button 
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-auto px-4 h-10 rounded-full border border-white/[0.1] bg-white/[0.03] backdrop-blur-xl flex items-center justify-center text-[#A1A1A1] hover:text-white hover:bg-white/[0.08] hover:border-white/[0.2] hover:shadow-[0_4px_20px_rgba(139,92,246,0.2)] transition-all gap-2"
               >
                 <Globe className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase">{i18n.language}</span>
               </button>
               
-              <div className="absolute right-0 top-full mt-2 w-32 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 flex flex-col py-2">
+              <motion.div 
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                className="absolute right-0 top-full mt-2 w-32 bg-[#1A1A1A]/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 flex flex-col py-2"
+              >
                 {[
                   { code: 'en', label: 'English' },
                   { code: 'hi', label: 'Hindi' },
@@ -127,10 +181,24 @@ function App() {
           </AnimatePresence>
         </main>
 
-        {/* Minimal Voice FAB */}
+        {/* Enhanced 3D Voice FAB */}
         <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ 
+            scale: 1.1,
+            rotate: [0, -5, 5, 0],
+            boxShadow: "0 20px 60px rgba(139,92,246,0.4)"
+          }}
+          whileTap={{ scale: 0.9 }}
+          animate={{
+            y: [0, -10, 0],
+          }}
+          transition={{
+            y: {
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }
+          }}
           onClick={() => {
             if ('webkitSpeechRecognition' in window) {
               const recognition = new (window as any).webkitSpeechRecognition();
@@ -158,10 +226,34 @@ function App() {
               alert("Voice Assistant is not supported in this browser.");
             }
           }}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-white text-black rounded-full shadow-[0_8px_30px_rgb(255,255,255,0.12)] flex items-center justify-center z-[100] group border border-white/20 cursor-pointer"
+          className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-br from-white via-blue-50 to-purple-100 text-black rounded-full shadow-[0_15px_50px_rgba(139,92,246,0.4)] flex items-center justify-center z-[100] group border-2 border-white/50 cursor-pointer backdrop-blur-xl"
         >
-          <Mic className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          <div className="absolute inset-0 rounded-full border border-white/50 animate-ping opacity-20" />
+          <Mic className="w-6 h-6 group-hover:scale-125 transition-all duration-300" />
+          <motion.div 
+            animate={{
+              scale: [1, 1.5, 1],
+              opacity: [0.5, 0, 0.5]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute inset-0 rounded-full border-2 border-purple-400"
+          />
+          <motion.div 
+            animate={{
+              scale: [1, 1.8, 1],
+              opacity: [0.3, 0, 0.3]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.5
+            }}
+            className="absolute inset-0 rounded-full border-2 border-blue-400"
+          />
         </motion.button>
       </div>
     </Router>

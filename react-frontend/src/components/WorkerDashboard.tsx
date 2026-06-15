@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { ArrowUpRight, CheckCircle, Clock, MapPin, Zap, Loader2, MessageSquare } from "lucide-react";
+import axios from "axios";
 import { motion } from "framer-motion";
+import { ArrowUpRight, CheckCircle, Clock, Loader2, MapPin, MessageSquare, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Tilt from "react-parallax-tilt";
 import { cn } from "../lib/utils";
-import axios from "axios";
 import ChatWindow from "./ChatWindow";
 
 interface Booking {
@@ -98,54 +98,161 @@ export default function WorkerDashboard() {
       {/* Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
         
-        {/* Earnings Card */}
+        {/* Enhanced 3D Earnings Card */}
         <Tilt
-          tiltMaxAngleX={5}
-          tiltMaxAngleY={5}
+          tiltMaxAngleX={8}
+          tiltMaxAngleY={8}
           perspective={1000}
+          glareEnable={true}
+          glareMaxOpacity={0.2}
+          glareColor="#8b5cf6"
+          glarePosition="all"
           className="md:col-span-2 md:row-span-2"
         >
-          <div className="bg-[#111111] border border-white/[0.05] rounded-3xl p-8 h-full flex flex-col justify-between relative overflow-hidden group shadow-2xl">
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+          <motion.div 
+            whileHover={{ boxShadow: "0 25px 50px rgba(139,92,246,0.3)" }}
+            className="bg-gradient-to-br from-[#111111] to-[#0A0A0A] border border-white/[0.08] rounded-3xl p-8 h-full flex flex-col justify-between relative overflow-hidden group shadow-2xl"
+          >
+            {/* Animated background orbs */}
+            <motion.div 
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.1, 0.2, 0.1],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full blur-3xl"
+            />
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all duration-700">
               <ArrowUpRight className="w-48 h-48" />
             </div>
-            <div>
-              <p className="text-[#A1A1A1] font-medium mb-2">{t('todays_earnings')}</p>
-              <h2 className="text-6xl md:text-7xl font-black tracking-tighter text-white">₹850</h2>
+            {/* Gradient overlay on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative z-10">
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-[#A1A1A1] font-medium mb-2"
+              >
+                {t('todays_earnings')}
+              </motion.p>
+              <motion.h2 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-6xl md:text-7xl font-black tracking-tighter bg-gradient-to-br from-white via-emerald-100 to-emerald-200 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+              >
+                ₹850
+              </motion.h2>
             </div>
-            <div className="flex gap-4 mt-12">
-              <div className="bg-white/[0.03] border border-white/[0.05] px-4 py-3 rounded-2xl flex-1 backdrop-blur-md">
-                <CheckCircle className="w-5 h-5 text-[#A1A1A1] mb-2" />
+            <div className="flex gap-4 mt-12 relative z-10">
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white/[0.05] border border-white/[0.1] px-4 py-3 rounded-2xl flex-1 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_40px_rgba(16,185,129,0.2)] transition-all"
+              >
+                <CheckCircle className="w-5 h-5 text-emerald-400 mb-2 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
                 <p className="text-white font-semibold">2 {t('completed')}</p>
-              </div>
-              <div className="bg-white/[0.03] border border-white/[0.05] px-4 py-3 rounded-2xl flex-1 backdrop-blur-md">
-                <Clock className="w-5 h-5 text-[#A1A1A1] mb-2" />
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white/[0.05] border border-white/[0.1] px-4 py-3 rounded-2xl flex-1 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.2)] transition-all"
+              >
+                <Clock className="w-5 h-5 text-blue-400 mb-2 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
                 <p className="text-white font-semibold">6h {t('logged')}</p>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </Tilt>
 
-        {/* Rating Card */}
-        <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} perspective={1000} className="md:col-span-1 md:row-span-1">
-          <div className="bg-[#111111] border border-white/[0.05] rounded-3xl p-6 h-full flex flex-col justify-between shadow-xl">
-            <p className="text-[#A1A1A1] font-medium text-sm">{t('top_rating')}</p>
-            <div>
-              <div className="text-4xl font-black text-white">4.8</div>
+        {/* Enhanced 3D Rating Card */}
+        <Tilt 
+          tiltMaxAngleX={15} 
+          tiltMaxAngleY={15} 
+          perspective={1000}
+          glareEnable={true}
+          glareMaxOpacity={0.25}
+          glareColor="#fbbf24"
+          glarePosition="all"
+          className="md:col-span-1 md:row-span-1"
+        >
+          <motion.div 
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: "0 20px 40px rgba(251,191,36,0.3)"
+            }}
+            className="bg-gradient-to-br from-[#111111] to-[#0A0A0A] border border-white/[0.08] rounded-3xl p-6 h-full flex flex-col justify-between shadow-xl relative overflow-hidden group"
+          >
+            <motion.div 
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.1, 0.2, 0.1],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-full blur-2xl"
+            />
+            <p className="text-[#A1A1A1] font-medium text-sm relative z-10">{t('top_rating')}</p>
+            <div className="relative z-10">
+              <div className="text-4xl font-black bg-gradient-to-br from-white via-yellow-100 to-orange-100 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">4.8</div>
               <div className="text-xs text-[#A1A1A1] mt-1">Based on 142 jobs</div>
             </div>
-          </div>
+          </motion.div>
         </Tilt>
 
-        {/* Action Card */}
-        <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} perspective={1000} className="md:col-span-1 md:row-span-1">
-          <div className="bg-white text-black rounded-3xl p-6 h-full flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-transform shadow-xl">
-            <p className="font-medium text-sm opacity-60">{t('payout_available')}</p>
-            <div>
+        {/* Enhanced 3D Action Card */}
+        <Tilt 
+          tiltMaxAngleX={15} 
+          tiltMaxAngleY={15} 
+          perspective={1000}
+          glareEnable={true}
+          glareMaxOpacity={0.3}
+          glareColor="#ffffff"
+          glarePosition="all"
+          className="md:col-span-1 md:row-span-1"
+        >
+          <motion.div 
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: "0 25px 50px rgba(255,255,255,0.3)"
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-gradient-to-br from-white to-blue-50 text-black rounded-3xl p-6 h-full flex flex-col justify-between cursor-pointer shadow-[0_15px_40px_rgba(255,255,255,0.2)] relative overflow-hidden group"
+          >
+            <motion.div 
+              animate={{
+                rotate: [0, 360],
+              }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-2xl"
+            />
+            <p className="font-medium text-sm opacity-60 relative z-10">{t('payout_available')}</p>
+            <div className="relative z-10">
               <div className="text-2xl font-bold">{t('withdraw')}</div>
-              <ArrowUpRight className="w-6 h-6 mt-2" />
+              <motion.div
+                animate={{
+                  x: [0, 5, 0],
+                  y: [0, -5, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <ArrowUpRight className="w-6 h-6 mt-2" />
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </Tilt>
 
         {/* Job List (takes up remaining space in bento) */}
@@ -167,18 +274,35 @@ export default function WorkerDashboard() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * index }}
+                  whileHover={{ 
+                    scale: 1.02, 
+                    y: -5,
+                    boxShadow: job.time.toLowerCase().includes("asap") || job.time.toLowerCase().includes("emergency") 
+                      ? "0 15px 40px rgba(239,68,68,0.3)" 
+                      : "0 15px 40px rgba(139,92,246,0.2)"
+                  }}
                   key={job.id}
-                  className="bg-[#111111] border border-white/[0.05] p-5 rounded-3xl hover:bg-[#161616] transition-colors flex flex-col md:flex-row md:items-center justify-between group cursor-pointer shadow-lg gap-4"
+                  className="bg-gradient-to-br from-[#111111] to-[#0A0A0A] border border-white/[0.08] p-5 rounded-3xl hover:bg-[#161616] hover:border-white/[0.15] transition-all flex flex-col md:flex-row md:items-center justify-between group cursor-pointer shadow-xl gap-4 backdrop-blur-xl relative overflow-hidden"
                 >
-                  <div className="flex gap-4 items-center">
-                    <div className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
-                      job.time.toLowerCase().includes("asap") || job.time.toLowerCase().includes("emergency") ? "bg-red-500/10 text-red-500" : "bg-white/5 text-[#A1A1A1]"
-                    )}>
-                      {job.time.toLowerCase().includes("asap") || job.time.toLowerCase().includes("emergency") ? <Zap className="w-5 h-5" /> : <MapPin className="w-5 h-5" />}
-                    </div>
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className="flex gap-4 items-center relative z-10">
+                    <motion.div 
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg backdrop-blur-xl",
+                        job.time.toLowerCase().includes("asap") || job.time.toLowerCase().includes("emergency") 
+                          ? "bg-red-500/20 text-red-400 border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.3)]" 
+                          : "bg-white/10 text-blue-400 border border-white/20"
+                      )}
+                    >
+                      {job.time.toLowerCase().includes("asap") || job.time.toLowerCase().includes("emergency") 
+                        ? <Zap className="w-5 h-5 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" /> 
+                        : <MapPin className="w-5 h-5" />
+                      }
+                    </motion.div>
                     <div>
-                      <h3 className="text-white font-bold text-lg leading-tight mb-1">{job.service} Request</h3>
+                      <h3 className="text-white font-bold text-lg leading-tight mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-blue-200 transition-all">{job.service} Request</h3>
                       <div className="flex items-center gap-3 text-sm text-[#A1A1A1]">
                         <span className="truncate max-w-[150px]">{job.address}</span>
                         <span className="w-1 h-1 rounded-full bg-white/20 shrink-0" />
@@ -187,23 +311,32 @@ export default function WorkerDashboard() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between md:flex-col md:items-end w-full md:w-auto">
-                    <div className="text-xl font-black text-white mb-0 md:mb-2 text-left md:text-right w-full">₹{job.advance_amount}</div>
+                  <div className="flex items-center justify-between md:flex-col md:items-end w-full md:w-auto relative z-10">
+                    <motion.div 
+                      whileHover={{ scale: 1.1 }}
+                      className="text-xl font-black bg-gradient-to-r from-white via-emerald-100 to-emerald-200 bg-clip-text text-transparent mb-0 md:mb-2 text-left md:text-right w-full drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                    >
+                      ₹{job.advance_amount}
+                    </motion.div>
                     
                     {isAccepted ? (
-                      <button 
+                      <motion.button 
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={(e) => { e.stopPropagation(); openChat(job); }}
-                        className="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2 w-full md:w-auto justify-center"
+                        className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs px-4 py-2 rounded-full shadow-[0_8px_25px_rgba(16,185,129,0.4)] hover:shadow-[0_12px_35px_rgba(16,185,129,0.6)] transition-all flex items-center gap-2 w-full md:w-auto justify-center relative z-10"
                       >
                         <MessageSquare className="w-3.5 h-3.5" /> {t('message')}
-                      </button>
+                      </motion.button>
                     ) : (
-                      <button 
+                      <motion.button 
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={(e) => { e.stopPropagation(); handleAcceptJob(job); }}
-                        className="bg-white text-black font-bold text-xs px-4 py-2 rounded-full shadow-lg hover:bg-emerald-500 hover:text-white transition-colors w-full md:w-auto justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                        className="bg-gradient-to-r from-white to-blue-100 text-black font-bold text-xs px-4 py-2 rounded-full shadow-[0_8px_25px_rgba(255,255,255,0.3)] hover:from-blue-500 hover:to-purple-500 hover:text-white transition-all w-full md:w-auto justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-10"
                       >
                         {t('accept_job')}
-                      </button>
+                      </motion.button>
                     )}
                   </div>
                 </motion.div>
