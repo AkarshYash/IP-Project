@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { createPortal } from "react-dom";
-import { X, Phone, Video, Camera, MapPin, Send, Plus, Map } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { AnimatePresence, motion } from "framer-motion";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { Camera, Map, MapPin, Phone, Plus, Send, Video, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import { MapContainer, Marker, TileLayer } from "react-leaflet";
 
 // Fix leaflet icon path issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -35,6 +35,8 @@ export default function ChatWindow({ isOpen, onClose, workerName }: ChatWindowPr
     { type: 'text', content: "chat_initial", isSelf: false, isSystem: true }
   ]);
   const [input, setInput] = useState("");
+  const [isCalling, setIsCalling] = useState(false);
+  const [callType, setCallType] = useState<'voice' | 'video' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
@@ -64,6 +66,31 @@ export default function ChatWindow({ isOpen, onClose, workerName }: ChatWindowPr
   const handleLocationClick = () => {
     // Simulate fetching geolocation
     setMessages(prev => [...prev, { type: 'location', content: "28.5355° N, 77.3910° E (Noida Sector 62)", isSelf: true }]);
+  };
+
+  const handleVoiceCall = () => {
+    setCallType('voice');
+    setIsCalling(true);
+    // Simulate call ending after 5 seconds
+    setTimeout(() => {
+      setIsCalling(false);
+      setCallType(null);
+    }, 5000);
+  };
+
+  const handleVideoCall = () => {
+    setCallType('video');
+    setIsCalling(true);
+    // Simulate call ending after 5 seconds
+    setTimeout(() => {
+      setIsCalling(false);
+      setCallType(null);
+    }, 5000);
+  };
+
+  const endCall = () => {
+    setIsCalling(false);
+    setCallType(null);
   };
 
   if (typeof document === 'undefined') return null;
@@ -97,11 +124,128 @@ export default function ChatWindow({ isOpen, onClose, workerName }: ChatWindowPr
               </div>
               
               <div className="flex items-center gap-3 text-[#A1A1A1]">
-                <button className="hover:text-white transition-colors p-2 bg-white/5 rounded-full"><Video className="w-4 h-4" /></button>
-                <button className="hover:text-white transition-colors p-2 bg-white/5 rounded-full"><Phone className="w-4 h-4" /></button>
+                <button onClick={handleVideoCall} className="hover:text-white transition-colors p-2 bg-white/5 rounded-full hover:bg-blue-600/20"><Video className="w-4 h-4" /></button>
+                <button onClick={handleVoiceCall} className="hover:text-white transition-colors p-2 bg-white/5 rounded-full hover:bg-emerald-600/20"><Phone className="w-4 h-4" /></button>
                 <button onClick={onClose} className="hover:text-red-400 transition-colors p-2 bg-white/5 rounded-full ml-2"><X className="w-4 h-4" /></button>
               </div>
             </div>
+
+            {/* Calling Overlay */}
+            <AnimatePresence>
+              {isCalling && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-50 bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-pink-900/95 backdrop-blur-xl flex flex-col items-center justify-center"
+                >
+                  {/* Avatar */}
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative mb-8"
+                  >
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-5xl font-bold shadow-2xl">
+                      {workerName.charAt(0)}
+                    </div>
+                    {/* Pulsing rings */}
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0.5, 0, 0.5],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className="absolute inset-0 rounded-full border-4 border-white"
+                    />
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        opacity: [0.3, 0, 0.3],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.5
+                      }}
+                      className="absolute inset-0 rounded-full border-4 border-white"
+                    />
+                  </motion.div>
+
+                  {/* Worker Name */}
+                  <motion.h2
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-3xl font-bold text-white mb-2"
+                  >
+                    {workerName}
+                  </motion.h2>
+
+                  {/* Call Status */}
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex items-center gap-2 mb-12"
+                  >
+                    <motion.div
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="w-2 h-2 rounded-full bg-emerald-400"
+                    />
+                    <span className="text-emerald-400 font-semibold text-lg">
+                      {callType === 'video' ? 'Connecting Video Call...' : 'Calling...'}
+                    </span>
+                  </motion.div>
+
+                  {/* Call Icon */}
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0]
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="mb-16"
+                  >
+                    {callType === 'video' ? (
+                      <Video className="w-16 h-16 text-white" />
+                    ) : (
+                      <Phone className="w-16 h-16 text-white" />
+                    )}
+                  </motion.div>
+
+                  {/* End Call Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={endCall}
+                    className="w-20 h-20 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center shadow-2xl transition-colors"
+                  >
+                    <X className="w-8 h-8 text-white" />
+                  </motion.button>
+
+                  {/* Timer */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="mt-6 text-white/60 text-sm"
+                  >
+                    Call will end automatically in 5 seconds...
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Messages Area */}
             <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-4 bg-[#0A0A0A]">
