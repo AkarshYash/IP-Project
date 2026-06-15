@@ -18,6 +18,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 from .api.chatbot import router as chatbot_router
 from .api.workers import router as workers_router
 from .api.bookings import router as bookings_router
+from .api.auth import router as auth_router
+from .api.analytics import router as analytics_router
+from .api.jobs import router as jobs_router
+from .api.conversations import router as conversations_router
+from .api.disputes import disputes_router, fraud_router
 
 
 @asynccontextmanager
@@ -45,6 +50,12 @@ app.add_middleware(
 app.include_router(chatbot_router, prefix="/api/chatbot", tags=["Chatbot"])
 app.include_router(workers_router, prefix="/api/workers", tags=["Workers"])
 app.include_router(bookings_router, prefix="/api/bookings", tags=["Bookings"])
+app.include_router(auth_router, tags=["Auth"])
+app.include_router(analytics_router, tags=["Analytics"])
+app.include_router(jobs_router, tags=["Jobs"])
+app.include_router(conversations_router, tags=["Conversations"])
+app.include_router(disputes_router, tags=["Disputes"])
+app.include_router(fraud_router, tags=["Fraud"])
 
 
 # Helper to load HTML templates dynamically
