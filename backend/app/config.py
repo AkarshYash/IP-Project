@@ -11,6 +11,8 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = "sqlite+aiosqlite:///./sahayak.db"
+    supabase_url: str = ""
+    supabase_key: str = ""
 
     # Redis
     redis_url: str = "redis://localhost:6379"
@@ -44,7 +46,7 @@ class Settings(BaseSettings):
     workers_csv_path: str = ""
 
     class Config:
-        env_file = ".env"
+        env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
         env_file_encoding = "utf-8"
         extra = "ignore"
 

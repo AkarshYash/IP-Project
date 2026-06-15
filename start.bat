@@ -4,7 +4,7 @@ color 0A
 
 echo.
 echo  ╔══════════════════════════════════════════════════╗
-echo  ║     Sahayak — BlueCollar AI Platform v2.0       ║
+echo  ║     Sahayak — BlueCollar AI Platform v2.0        ║
 echo  ╚══════════════════════════════════════════════════╝
 echo.
 

@@ -83,29 +83,57 @@ class RegisterRequest(BaseModel):
     role: str = "employer"
 
 
+class GoogleLoginRequest(BaseModel):
+    email: str
+    name: str
+    role: str = "worker"
+
+
+class MobileLoginRequest(BaseModel):
+    mobile: str
+    otp: str
+    role: str = "worker"
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 @router.post("/login", response_model=LoginResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
-    """Login and return JWT token. Auto-creates admin on first run."""
+    """Login using Supabase Auth."""
+    from app.services.supabase_client import supabase_client
+    
+    if supabase_client:
+        try:
+            auth_response = supabase_client.auth.sign_in_with_password({
+                "email": form_data.username, # Assuming username field is used for email in OAuth form
+                "password": form_data.password
+            })
+            
+            # Optionally sync with local DB or fetch role
+            result = await db.execute(select(User).where(User.email == form_data.username))
+            user = result.scalar_one_or_none()
+            role = user.role.value if user else "worker"
+            
+            return LoginResponse(
+                access_token=auth_response.session.access_token,
+                user={
+                    "email": auth_response.user.email,
+                    "role": role,
+                },
+            )
+        except Exception as e:
+            logger.error(f"Supabase login failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=str(e),
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    
+    # Fallback to local DB if Supabase is not configured
     result = await db.execute(select(User).where(User.username == form_data.username))
     user = result.scalar_one_or_none()
-
-    # Auto-create default admin if DB is empty
-    if not user and form_data.username == "admin":
-        logger.info("Creating default admin user...")
-        user = User(
-            username="admin",
-            email="admin@sahayak.ai",
-            hashed_password=hash_password("sahayak2024"),
-            role=UserRole.admin,
-            is_active=True,
-        )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
 
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -118,7 +146,6 @@ async def login(
     await db.commit()
 
     token = create_access_token({"sub": user.username, "role": user.role.value})
-    logger.info(f"Login successful: {user.username}")
     return LoginResponse(
         access_token=token,
         user={
@@ -131,7 +158,9 @@ async def login(
 
 @router.post("/register")
 async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    """Register a new user account."""
+    """Register a new user using Supabase Auth."""
+    from app.services.supabase_client import supabase_client
+    
     result = await db.execute(select(User).where(User.username == data.username))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -145,6 +174,18 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     except ValueError:
         role = UserRole.employer
 
+    # Sync to Supabase Auth
+    if supabase_client:
+        try:
+            supabase_client.auth.sign_up({
+                "email": data.email,
+                "password": data.password
+            })
+        except Exception as e:
+            logger.error(f"Supabase sign up failed: {e}")
+            raise HTTPException(status_code=400, detail=str(e))
+
+    # Sync to local DB
     user = User(
         username=data.username,
         email=data.email,
@@ -156,6 +197,93 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     await db.commit()
     logger.info(f"New user registered: {data.username}")
     return {"message": "Account created successfully", "username": data.username}
+
+
+@router.post("/google-login", response_model=LoginResponse)
+async def google_login(data: GoogleLoginRequest, db: AsyncSession = Depends(get_db)):
+    """Simulated Google Login"""
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        try:
+            role = UserRole(data.role)
+        except ValueError:
+            role = UserRole.employer
+            
+        username = data.email.split('@')[0]
+        # Ensure username uniqueness
+        res = await db.execute(select(User).where(User.username == username))
+        if res.scalar_one_or_none():
+            import random
+            username = f"{username}{random.randint(100, 9999)}"
+
+        user = User(
+            username=username,
+            email=data.email,
+            hashed_password=hash_password("google_auth_placeholder"),
+            role=role,
+            is_active=True,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+    user.last_login = datetime.utcnow()
+    await db.commit()
+
+    token = create_access_token({"sub": user.username, "role": user.role.value})
+    logger.info(f"Google login successful: {user.username}")
+    return LoginResponse(
+        access_token=token,
+        user={
+            "username": user.username,
+            "email": user.email,
+            "role": user.role.value,
+        },
+    )
+
+
+@router.post("/mobile-login", response_model=LoginResponse)
+async def mobile_login(data: MobileLoginRequest, db: AsyncSession = Depends(get_db)):
+    """Simulated Mobile OTP Login"""
+    if data.otp != "1234":
+        raise HTTPException(status_code=400, detail="Invalid OTP. Use 1234 for demo.")
+
+    email = f"{data.mobile}@mobile.sahayak.ai"
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        try:
+            role = UserRole(data.role)
+        except ValueError:
+            role = UserRole.employer
+
+        user = User(
+            username=f"user_{data.mobile}",
+            email=email,
+            hashed_password=hash_password("mobile_auth_placeholder"),
+            role=role,
+            is_active=True,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+    user.last_login = datetime.utcnow()
+    await db.commit()
+
+    token = create_access_token({"sub": user.username, "role": user.role.value})
+    logger.info(f"Mobile login successful: {user.username}")
+    return LoginResponse(
+        access_token=token,
+        user={
+            "username": user.username,
+            "email": user.email,
+            "role": user.role.value,
+        },
+    )
 
 
 @router.get("/me")

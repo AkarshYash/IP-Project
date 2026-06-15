@@ -1,1 +1,1 @@
-# Sahayak Backend Package
+# BlueCollar Platform Backend

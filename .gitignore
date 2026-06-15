@@ -1,52 +1,58 @@
+# Large media files (GitHub 100MB limit)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wmv
+
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
 *.pyo
 *.pyd
-.Python
+*.egg
 *.egg-info/
 dist/
 build/
 .eggs/
-*.egg
-.venv/
+*.whl
+*.so
+
+# Virtual Environments
 venv/
+.venv/
 env/
+.env.local
+.env.production
 
-# Environment
-.env
-*.env.local
-
-# Database
+# Database files
 *.db
+*.sqlite
 *.sqlite3
 
-# Node
-node_modules/
-dist/
-.cache/
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Vite
-frontend/dist/
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
 
 # Logs
 *.log
 logs/
 
-# OS
-.DS_Store
-Thumbs.db
+# Node
+node_modules/
 
-# IDE
-.vscode/settings.json
-.idea/
-*.swp
+# Temp
+*.tmp
+*.temp
 
-# Test artifacts
-.pytest_cache/
-htmlcov/
-.coverage
-test_results.txt
-
-# Docker volumes
-postgres_data/
+.env
+react-frontend/node_modules/
+node_modules/

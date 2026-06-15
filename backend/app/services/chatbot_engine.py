@@ -1,19 +1,31 @@
 """
-Core Chatbot Engine — orchestrates the full AI pipeline:
-Language detect → Moderate → Translate → Classify → Handle/LLM → Translate back → Persist
+Core Chatbot Engine — LangGraph Multi-Agent Pipeline
+StateGraph routes: Language Detect -> Intent Agent -> Context Agent -> Response Agent
 """
 import time
 import logging
 from dataclasses import dataclass
-from typing import Optional
-
-from app.services.translation_service import detect_language, translate_to_english, translate_from_english
-from app.services.moderation import moderate
-from app.services.intent_classifier import classify_intent
-from app.services.action_handlers import get_handler
+from typing import Optional, Dict, Any, List
+from typing_extensions import TypedDict
 
 logger = logging.getLogger(__name__)
 
+try:
+    from langgraph.graph import StateGraph, START, END
+    from langchain_groq import ChatGroq
+    from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+    LANGGRAPH_AVAILABLE = True
+except Exception as exc:
+    StateGraph = None
+    START = END = None
+    ChatGroq = None
+    HumanMessage = SystemMessage = AIMessage = None
+    LANGGRAPH_AVAILABLE = False
+    logger.warning(f"LangGraph stack unavailable, using fallback mode: {exc}")
+
+from app.services.translation_service import detect_language, translate_to_english, translate_from_english
+from app.services.moderation import moderate
+from app.services.action_handlers import get_handler
 
 @dataclass
 class ChatResponse:
@@ -26,6 +38,170 @@ class ChatResponse:
     entities: dict
     llm_used: bool = False
 
+# Define our LangGraph State
+class AgentState(TypedDict):
+    original_message: str
+    translated_message: str
+    history: List[dict]
+    language: str
+    intent: str
+    confidence: float
+    entities: Dict[str, Any]
+    context: str
+    final_response_en: str
+    pii_found: List[str]
+    is_safe: bool
+    moderation_reason: str
+
+
+# -- LangGraph Nodes --
+
+def node_moderate(state: AgentState) -> AgentState:
+    """Check safety and extract PII"""
+    mod_result = moderate(state["original_message"])
+    state["is_safe"] = mod_result["safe"]
+    state["moderation_reason"] = mod_result.get("reason", "")
+    state["pii_found"] = mod_result["pii_found"]
+    
+    if state["is_safe"]:
+        # Translate to english
+        state["translated_message"] = translate_to_english(mod_result["masked_text"], source_lang=state["language"])
+    else:
+        state["final_response_en"] = "⚠️ Request blocked by safety policy."
+    return state
+
+
+async def node_intent(state: AgentState) -> AgentState:
+    """Agent 1: Classify Intent using Groq LLM"""
+    from app.config import get_settings
+    settings = get_settings()
+
+    if not settings.groq_api_key:
+        # Fallback to rule-based if no API key
+        from app.services.intent_classifier import classify_intent
+        res = classify_intent(state["translated_message"])
+        state["intent"] = res.intent
+        state["confidence"] = res.confidence
+        state["entities"] = res.entities
+        return state
+
+    try:
+        from app.config import get_settings
+        settings = get_settings()
+
+        if settings.groq_api_key:
+            llm = ChatGroq(api_key=settings.groq_api_key, model="llama3-8b-8192", temperature=0.1)
+        else:
+            # Fallback to local Ollama if Groq is not configured
+            from langchain_community.chat_models import ChatOllama
+            llm = ChatOllama(model="llama3", temperature=0.1)
+
+        prompt = f"""Classify the intent of this blue-collar job query.
+Possible intents: find_worker, check_salary, register_worker, check_availability, job_status, payment_issue, dispute, emergency, general.
+Extract any locations (city, state) or designations.
+Reply ONLY with a JSON dictionary containing 'intent', 'confidence' (0.0-1.0), and 'entities'.
+Query: "{state["translated_message"]}"
+"""
+        res = await llm.ainvoke([HumanMessage(content=prompt)])
+        import json, re
+        match = re.search(r"\{.*\}", res.content, re.DOTALL)
+        if match:
+            data = json.loads(match.group())
+            state["intent"] = data.get("intent", "general")
+            state["confidence"] = float(data.get("confidence", 0.5))
+            state["entities"] = data.get("entities", {})
+        else:
+            state["intent"] = "general"
+            state["confidence"] = 0.5
+            state["entities"] = {}
+    except Exception as e:
+        logger.error(f"Intent LLM failed: {e}")
+        state["intent"] = "general"
+        state["confidence"] = 0.1
+        state["entities"] = {}
+    return state
+
+
+async def node_context(state: AgentState) -> AgentState:
+    """Agent 2: Fetch context from vector DB or action handlers"""
+    intent = state.get("intent", "general")
+    if state.get("confidence", 0) >= 0.3 and intent != "general":
+        try:
+            handler = get_handler(intent)
+            # Use handler to get context/response string
+            context_str = handler(state["entities"], lang="en")
+            state["context"] = context_str
+        except Exception as e:
+            state["context"] = ""
+    else:
+        state["context"] = "No specific context available."
+    return state
+
+
+async def node_response(state: AgentState) -> AgentState:
+    """Agent 3: Format the final response"""
+    from app.config import get_settings
+    settings = get_settings()
+
+    if not settings.groq_api_key:
+        state["final_response_en"] = state.get("context", "I can help with job queries. Please configure an API key for full AI capabilities.")
+        return state
+
+    try:
+        from app.config import get_settings
+        settings = get_settings()
+
+        if settings.groq_api_key:
+            llm = ChatGroq(api_key=settings.groq_api_key, model="llama3-70b-8192", temperature=0.7)
+        else:
+            # Fallback to local Ollama if Groq is not configured
+            from langchain_community.chat_models import ChatOllama
+            llm = ChatOllama(model="llama3", temperature=0.7)
+
+        sys_msg = SystemMessage(content="You are Sahayak, an AI assistant for a blue-collar job marketplace in India. Be concise, helpful, and friendly (max 150 words). Include emojis.")
+        
+        # Build prompt
+        hist_msgs = []
+        for h in state.get("history", [])[-4:]:
+            if h["role"] == "user":
+                hist_msgs.append(HumanMessage(content=h["content"]))
+            else:
+                hist_msgs.append(AIMessage(content=h["content"]))
+                
+        user_msg = HumanMessage(content=f"User query: {state['translated_message']}\nSystem Context: {state.get('context', '')}\nProvide a helpful response to the user query based on the system context.")
+        
+        res = await llm.ainvoke([sys_msg] + hist_msgs + [user_msg])
+        state["final_response_en"] = res.content
+    except Exception as e:
+        logger.error(f"Response LLM failed: {e}")
+        state["final_response_en"] = state.get("context", "An error occurred generating a response.")
+    return state
+
+
+# Router logic
+def route_after_moderate(state: AgentState) -> str:
+    if not state["is_safe"]:
+        return "end"
+    return "intent"
+
+
+if LANGGRAPH_AVAILABLE and StateGraph is not None:
+    graph_builder = StateGraph(AgentState)
+    graph_builder.add_node("moderate", node_moderate)
+    graph_builder.add_node("intent", node_intent)
+    graph_builder.add_node("context", node_context)
+    graph_builder.add_node("response", node_response)
+
+    graph_builder.add_edge(START, "moderate")
+    graph_builder.add_conditional_edges("moderate", route_after_moderate, {"end": END, "intent": "intent"})
+    graph_builder.add_edge("intent", "context")
+    graph_builder.add_edge("context", "response")
+    graph_builder.add_edge("response", END)
+
+    chatbot_graph = graph_builder.compile()
+else:
+    chatbot_graph = None
+
 
 async def process_message(
     user_message: str,
@@ -33,135 +209,61 @@ async def process_message(
     conversation_history: list = None,
     force_language: Optional[str] = None,
 ) -> ChatResponse:
-    """
-    Full pipeline:
-    1. Detect language
-    2. Moderate content (PII masking, harmful content check)
-    3. Translate to English
-    4. Classify intent
-    5. Route to handler or LLM
-    6. Translate response back to user language
-    """
+    """Entry point for the LangGraph pipeline"""
     start_time = time.time()
-
-    # 1. Detect language
+    
     detected_lang = force_language or detect_language(user_message)
 
-    # 2. Moderation
-    mod_result = moderate(user_message)
-    if not mod_result["safe"]:
-        reason = mod_result["reason"]
-        response_text = {
-            "harmful_intent": "⚠️ I cannot help with that request. Please ask about job-related topics.",
-            "profanity": "🙏 Please keep our conversation respectful. I'm here to help with work-related queries.",
-        }.get(reason, "⚠️ Request blocked by content policy.")
+    initial_state = {
+        "original_message": user_message,
+        "translated_message": "",
+        "history": conversation_history or [],
+        "language": detected_lang,
+        "intent": "general",
+        "confidence": 0.0,
+        "entities": {},
+        "context": "",
+        "final_response_en": "",
+        "pii_found": [],
+        "is_safe": True,
+        "moderation_reason": ""
+    }
 
-        elapsed = int((time.time() - start_time) * 1000)
-        return ChatResponse(
-            response=response_text,
-            intent="blocked",
-            confidence=1.0,
-            language=detected_lang,
-            response_time_ms=elapsed,
-            pii_found=mod_result["pii_found"],
-            entities={},
-        )
+    try:
+        if chatbot_graph is not None:
+            final_state = await chatbot_graph.ainvoke(initial_state)
+        else:
+            final_state = initial_state
+            final_state["intent"] = "general"
+            final_state["confidence"] = 0.4
+            final_state["entities"] = {}
+            final_state["final_response_en"] = (
+                "I can help you find workers, check salary ranges, or guide you through booking. "
+                "The AI stack is currently in fallback mode, so I am using the built-in worker matching flow."
+            )
+    except Exception as e:
+        logger.error(f"LangGraph failed: {e}")
+        final_state = initial_state
+        final_state["final_response_en"] = "I'm having trouble processing your request right now."
 
-    # 3. Translate to English if needed
-    working_text = translate_to_english(mod_result["masked_text"], source_lang=detected_lang)
-
-    # 4. Intent classification
-    intent_result = classify_intent(working_text)
-
-    # 5. Route to handler or LLM
-    llm_used = False
-    if intent_result.confidence >= 0.3 and intent_result.intent != "general":
-        # Use structured handler
-        handler = get_handler(intent_result.intent)
-        response_en = handler(intent_result.entities, lang=detected_lang)
+    # Translate back to user language
+    if final_state["is_safe"]:
+        final_response_local = translate_from_english(final_state["final_response_en"], target_lang=detected_lang)
     else:
-        # Fall back to LLM
-        response_en = await _call_llm(working_text, conversation_history or [], intent_result.entities)
-        llm_used = True
-
-    # 6. Translate response back if needed
-    final_response = translate_from_english(response_en, target_lang=detected_lang)
+        final_response_local = final_state["final_response_en"]
 
     elapsed = int((time.time() - start_time) * 1000)
 
+    from app.config import get_settings
+    llm_used = bool(get_settings().groq_api_key)
+
     return ChatResponse(
-        response=final_response,
-        intent=intent_result.intent,
-        confidence=intent_result.confidence,
+        response=final_response_local,
+        intent=final_state["intent"],
+        confidence=final_state["confidence"],
         language=detected_lang,
         response_time_ms=elapsed,
-        pii_found=mod_result["pii_found"],
-        entities=intent_result.entities,
+        pii_found=final_state.get("pii_found", []),
+        entities=final_state.get("entities", {}),
         llm_used=llm_used,
-    )
-
-
-async def _call_llm(
-    message: str,
-    history: list,
-    entities: dict,
-) -> str:
-    """Call Groq LLM with context about the platform."""
-    from app.config import get_settings
-    settings = get_settings()
-
-    if not settings.groq_api_key:
-        return _fallback_response(message)
-
-    try:
-        from groq import Groq
-        client = Groq(api_key=settings.groq_api_key)
-
-        system_prompt = """You are Sahayak, an AI assistant for a blue-collar job marketplace in India.
-        
-You help with:
-- Finding skilled workers (electricians, plumbers, carpenters, mechanics, etc.)
-- Checking market salary rates in Indian cities
-- Worker registration and verification
-- Payment and dispute resolution
-- Emergency worker requests
-
-Guidelines:
-- Be concise and helpful (max 150 words)
-- Use simple language suitable for both employers and workers
-- Include INR amounts when discussing salaries
-- Mention specific Indian cities when relevant
-- Use relevant emojis to make responses friendly
-- If someone asks about safety emergencies, always prioritize safety first
-- Do NOT discuss topics unrelated to blue-collar work, jobs, or the platform"""
-
-        messages = [{"role": "system", "content": system_prompt}]
-
-        # Add conversation history (last 4 exchanges)
-        for h in history[-8:]:
-            messages.append({"role": h["role"], "content": h["content"]})
-
-        messages.append({"role": "user", "content": message})
-
-        response = client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=messages,
-            max_tokens=300,
-            temperature=0.7,
-        )
-        return response.choices[0].message.content
-
-    except Exception as e:
-        logger.error(f"LLM call failed: {e}")
-        return _fallback_response(message)
-
-
-def _fallback_response(message: str) -> str:
-    """Intelligent fallback when no API key is configured."""
-    return (
-        "🤖 I understand your query! For the best results:\n\n"
-        "• Use the **Workers** page to search and filter workers\n"
-        "• Check **Analytics** for salary market data\n"
-        "• Visit **Settings** to configure your Groq API key for enhanced AI responses\n\n"
-        "💡 Get a free Groq API key at **console.groq.com** for full AI chat capabilities!"
     )
