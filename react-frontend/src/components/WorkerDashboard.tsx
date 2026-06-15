@@ -32,7 +32,9 @@ export default function WorkerDashboard() {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await axios.get("http://localhost:8001/api/bookings");
+        const API_HOST = import.meta.env.VITE_API_URL || "localhost:8001";
+        const API_URL = API_HOST.startsWith("http") ? API_HOST : `https://${API_HOST}`;
+        const response = await axios.get(`${API_URL}/api/bookings`);
         // Sort to show newest first
         const sortedJobs = (response.data.bookings || []).sort((a: Booking, b: Booking) => 
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -53,7 +55,9 @@ export default function WorkerDashboard() {
 
   const handleAcceptJob = async (job: Booking) => {
     try {
-      await axios.post(`http://localhost:8001/api/bookings/${job.id}/accept`);
+      const API_HOST = import.meta.env.VITE_API_URL || "localhost:8001";
+      const API_URL = API_HOST.startsWith("http") ? API_HOST : `https://${API_HOST}`;
+      await axios.post(`${API_URL}/api/bookings/${job.id}/accept`);
       setAcceptedJobs(prev => new Set(prev).add(job.id));
       setActiveJob(job);
       setChatOpen(true);

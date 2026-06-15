@@ -5,7 +5,6 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/IP-Project/',
   plugins: [
     react(),
     tailwindcss()
@@ -14,5 +13,8 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  server: {
+    allowedHosts: true,
   },
 })

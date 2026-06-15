@@ -1,0 +1,49 @@
+services:
+  # 1. Chatbot Backend
+  - type: web
+    name: chatbot-backend
+    env: python
+    region: oregon
+    buildCommand: "cd bluecollar-chatbot/backend && pip install -r requirements.txt"
+    startCommand: "cd bluecollar-chatbot/backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        value: "sqlite+aiosqlite:///./bluecollar.db"
+      - key: REDIS_ENABLED
+        value: "False"
+      - key: GROQ_API_KEY
+        sync: false
+
+  # 2. Platform Backend
+  - type: web
+    name: platform-backend
+    env: python
+    region: oregon
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        value: "sqlite+aiosqlite:///./platform.db"
+      - key: REDIS_ENABLED
+        value: "False"
+      - key: CHATBOT_API_URL
+        fromService:
+          type: web
+          name: chatbot-backend
+          property: host
+      - key: GROQ_API_KEY
+        sync: false
+
+  # 3. React Frontend
+  - type: web
+    name: react-frontend
+    env: static
+    region: oregon
+    buildCommand: "cd react-frontend && npm install && npm run build"
+    staticPublishPath: "./react-frontend/dist"
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: platform-backend
+          property: host

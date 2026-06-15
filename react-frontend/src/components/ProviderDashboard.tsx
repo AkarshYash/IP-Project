@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, Star, MapPin, ChevronRight, ShieldCheck, Loader2, MessageSquare } from "lucide-react";
+import { Search, Star, MapPin, ShieldCheck, Loader2, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import Tilt from "react-parallax-tilt";
 import axios from "axios";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from 'leaflet';
 import ChatWindow from "./ChatWindow";
 
@@ -45,7 +45,9 @@ export default function ProviderDashboard() {
     const fetchWorkers = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:8001/api/workers/search?query=${query}`);
+        const API_HOST = import.meta.env.VITE_API_URL || "localhost:8001";
+        const API_URL = API_HOST.startsWith("http") ? API_HOST : `https://${API_HOST}`;
+        const response = await axios.get(`${API_URL}/api/workers/search?query=${query}`);
         setWorkers(response.data.workers || []);
       } catch (error) {
         console.error("Failed to fetch workers:", error);
@@ -61,7 +63,9 @@ export default function ProviderDashboard() {
   const handleHire = async (worker: Worker) => {
     try {
       // Create a booking
-      await axios.post("http://localhost:8001/api/bookings", {
+      const API_HOST = import.meta.env.VITE_API_URL || "localhost:8001";
+      const API_URL = API_HOST.startsWith("http") ? API_HOST : `https://${API_HOST}`;
+      await axios.post(`${API_URL}/api/bookings`, {
         worker_id: worker.id,
         worker_name: worker.name,
         customer_id: "C-DEMO",
@@ -134,7 +138,7 @@ export default function ProviderDashboard() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
               />
               {/* Simulate markers around center based on workers array length */}
-              {!loading && workers.map((worker, i) => {
+              {!loading && workers.map((worker) => {
                 const offsetLat = mapCenter[0] + (Math.random() - 0.5) * 0.05;
                 const offsetLng = mapCenter[1] + (Math.random() - 0.5) * 0.05;
                 return (
