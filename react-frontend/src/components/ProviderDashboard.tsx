@@ -135,6 +135,19 @@ export default function ProviderDashboard() {
             placeholder={t('search_placeholder')}
             className="relative w-full bg-[#111111]/80 backdrop-blur-xl border border-white/[0.08] text-white rounded-full py-6 pl-16 pr-6 text-lg focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all placeholder:text-[#666666] shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           />
+          {query && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute inset-y-0 right-6 flex items-center z-10"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full"
+              />
+            </motion.div>
+          )}
         </div>
       </motion.div>
 

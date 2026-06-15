@@ -11,6 +11,9 @@ function App() {
   const { t, i18n } = useTranslation();
   const [role, setRole] = useState<'worker' | 'provider'>('provider');
   const [scrolled, setScrolled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [showTranscript, setShowTranscript] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -181,6 +184,132 @@ function App() {
           </AnimatePresence>
         </main>
 
+        {/* Enhanced Voice Assistant with Visual Feedback */}
+        <AnimatePresence>
+          {isListening && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[99] flex items-center justify-center"
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-white/20 rounded-3xl p-12 max-w-md w-full mx-4 relative overflow-hidden"
+              >
+                {/* Animated background */}
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.1, 0.2, 0.1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full blur-3xl"
+                />
+
+                <div className="relative z-10 flex flex-col items-center gap-6">
+                  {/* Animated Microphone */}
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-[0_0_50px_rgba(139,92,246,0.5)]"
+                  >
+                    <Mic className="w-12 h-12 text-white" />
+                  </motion.div>
+
+                  {/* Listening Text */}
+                  <div className="text-center">
+                    <motion.h3
+                      animate={{ opacity: [1, 0.5, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="text-2xl font-bold text-white mb-2"
+                    >
+                      Listening...
+                    </motion.h3>
+                    <p className="text-[#A1A1A1] text-sm">
+                      {role === 'provider' ? 'Say a skill name to search (e.g., "plumber", "electrician")' : 'Speak to search for jobs'}
+                    </p>
+                  </div>
+
+                  {/* Live Transcript */}
+                  {transcript && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-xl"
+                    >
+                      <p className="text-xs text-[#A1A1A1] mb-1">You said:</p>
+                      <p className="text-white font-semibold">{transcript}</p>
+                    </motion.div>
+                  )}
+
+                  {/* Audio Visualizer */}
+                  <div className="flex items-center gap-2">
+                    {[...Array(5)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        animate={{
+                          height: ["20px", "40px", "20px"],
+                        }}
+                        transition={{
+                          duration: 0.8,
+                          repeat: Infinity,
+                          delay: i * 0.1,
+                          ease: "easeInOut"
+                        }}
+                        className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Transcript Notification */}
+        <AnimatePresence>
+          {showTranscript && transcript && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, x: 20 }}
+              animate={{ opacity: 1, y: 0, x: 0 }}
+              exit={{ opacity: 0, y: 20, x: 20 }}
+              className="fixed bottom-28 right-8 z-[98] bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-white/20 rounded-2xl p-4 max-w-xs shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0">
+                  <motion.svg
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-5 h-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </motion.svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-emerald-400 font-semibold text-sm mb-1">Search Updated!</p>
+                  <p className="text-white text-sm">"{transcript}"</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Enhanced 3D Voice FAB */}
         <motion.button 
           whileHover={{ 
@@ -200,30 +329,67 @@ function App() {
             }
           }}
           onClick={() => {
-            if ('webkitSpeechRecognition' in window) {
-              const recognition = new (window as any).webkitSpeechRecognition();
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+              const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+              const recognition = new SpeechRecognition();
               recognition.continuous = false;
-              recognition.interimResults = false;
-              recognition.lang = i18n.language === 'hi' ? 'hi-IN' : 'en-US'; // Can be expanded for other languages
+              recognition.interimResults = true;
+              
+              // Set language based on current app language
+              const langMap: any = {
+                'en': 'en-US',
+                'hi': 'hi-IN',
+                'pa': 'pa-IN',
+                'gu': 'gu-IN',
+                'kn': 'kn-IN',
+                'ta': 'ta-IN',
+                'te': 'te-IN',
+                'rj': 'hi-IN'
+              };
+              recognition.lang = langMap[i18n.language] || 'en-US';
               
               recognition.onstart = () => {
-                alert("Voice Assistant Listening... Speak now!");
+                setIsListening(true);
+                setTranscript('');
+                setShowTranscript(false);
               };
               
               recognition.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                // Dispatch custom event to ProviderDashboard search bar
-                window.dispatchEvent(new CustomEvent('voiceSearch', { detail: transcript }));
-                alert(`Voice Detected: "${transcript}". Populating search...`);
+                const current = event.resultIndex;
+                const transcriptText = event.results[current][0].transcript;
+                setTranscript(transcriptText);
+                
+                // If final result, dispatch search event
+                if (event.results[current].isFinal) {
+                  window.dispatchEvent(new CustomEvent('voiceSearch', { detail: transcriptText }));
+                }
+              };
+              
+              recognition.onend = () => {
+                setIsListening(false);
+                if (transcript) {
+                  setShowTranscript(true);
+                  setTimeout(() => setShowTranscript(false), 3000);
+                }
               };
               
               recognition.onerror = (event: any) => {
-                alert("Speech recognition error: " + event.error);
+                setIsListening(false);
+                console.error("Speech recognition error:", event.error);
+                if (event.error === 'no-speech') {
+                  setTranscript('No speech detected. Please try again.');
+                } else if (event.error === 'not-allowed') {
+                  setTranscript('Microphone access denied. Please allow microphone access.');
+                } else {
+                  setTranscript(`Error: ${event.error}`);
+                }
+                setShowTranscript(true);
+                setTimeout(() => setShowTranscript(false), 3000);
               };
               
               recognition.start();
             } else {
-              alert("Voice Assistant is not supported in this browser.");
+              alert("Voice Assistant is not supported in this browser. Please use Chrome, Edge, or Safari.");
             }
           }}
           className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-br from-white via-blue-50 to-purple-100 text-black rounded-full shadow-[0_15px_50px_rgba(139,92,246,0.4)] flex items-center justify-center z-[100] group border-2 border-white/50 cursor-pointer backdrop-blur-xl"
