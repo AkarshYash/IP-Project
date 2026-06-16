@@ -41,7 +41,7 @@ app = FastAPI(
 # CORS - Allow React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,25 +61,46 @@ app.include_router(fraud_router, tags=["Fraud"])
 
 @app.get("/")
 async def root():
-    """API root endpoint"""
     return {
         "app": "Sahayak API",
         "version": "2.0.0",
         "status": "running",
-        "docs": "/docs",
-        "frontend": "React app at http://localhost:5173"
+        "docs": "/docs"
     }
+
+
+@app.get("/init-db")
+async def init_db():
+    try:
+        from app.models.database import async_session
+        from app.models.db_models import Worker
+        from sqlalchemy import select
+        
+        async with async_session() as session:
+            result = await session.execute(select(Worker).limit(1))
+            if result.scalar_one_or_none():
+                return {"status": "already_initialized"}
+            
+            workers = [
+                {"worker_id": "WKR001", "full_name": "Rajesh Kumar", "designation": "Carpenter", "rating": 4.5, "reviews_count": 45, "hourly_rate_inr": 300, "experience_years": 5, "mobile_number": "+91 9876543210", "state": "Delhi", "city": "New Delhi", "languages_known": "Hindi, English", "location": "Connaught Place", "payment_method": "Cash, UPI", "availability": "Available", "profile_summary": "Experienced carpenter", "verification_status": "verified"},
+                {"worker_id": "WKR002", "full_name": "Amit Sharma", "designation": "Plumber", "rating": 4.7, "reviews_count": 62, "hourly_rate_inr": 350, "experience_years": 7, "mobile_number": "+91 9876543211", "state": "Maharashtra", "city": "Mumbai", "languages_known": "Hindi, Marathi", "location": "Andheri", "payment_method": "Cash, UPI", "availability": "Available", "profile_summary": "Professional plumber", "verification_status": "verified"},
+                {"worker_id": "WKR003", "full_name": "Suresh Patel", "designation": "Electrician", "rating": 4.6, "reviews_count": 53, "hourly_rate_inr": 400, "experience_years": 6, "mobile_number": "+91 9876543212", "state": "Karnataka", "city": "Bangalore", "languages_known": "Hindi, Kannada", "location": "Koramangala", "payment_method": "UPI", "availability": "Available", "profile_summary": "Certified electrician", "verification_status": "verified"},
+            ]
+            
+            for w in workers:
+                session.add(Worker(**w))
+            await session.commit()
+            
+            return {"status": "success", "added": len(workers)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @app.get("/health")
 async def health():
-    """Health check endpoint"""
     return {"status": "ok", "service": "sahayak-api"}
 
 
-# For Render.com health checks
 @app.get("/ping")
 async def ping():
-    """Ping endpoint for health monitoring"""
     return {"ping": "pong"}
-
