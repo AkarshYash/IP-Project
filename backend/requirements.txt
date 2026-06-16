@@ -15,7 +15,7 @@ langdetect==1.0.9
 
 # Environment & HTTP
 python-dotenv==1.0.0
-httpx==0.25.0
+httpx==0.24.1
 
 # Security
 passlib[bcrypt]==1.7.4
