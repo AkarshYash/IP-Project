@@ -4,7 +4,14 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "regions": ["sin1"],
-
+  "env": {
+    "VITE_API_URL": "https://ip-project-3.onrender.com"
+  },
+  "build": {
+    "env": {
+      "VITE_API_URL": "https://ip-project-3.onrender.com"
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",
