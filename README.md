@@ -1,419 +1,280 @@
-# 🔧 Sahayak — AI-Powered Blue-Collar Workforce Platform
+# 🔧 Sahayak - AI-Powered Blue-Collar Job Platform
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
-![Python](https://img.shields.io/badge/Python-3.11+-green)
-![React](https://img.shields.io/badge/React-19.2-61dafb)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688)
-![License](https://img.shields.io/badge/license-MIT-orange)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg)
+![React](https://img.shields.io/badge/React-18.x-61DAFB.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791.svg)
 
-**Modern full-stack platform connecting skilled blue-collar workers with clients using AI, ML, and real-time communication.**
+**Connecting skilled workers with opportunities through AI-powered matching and voice assistance**
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [API Docs](#-api-documentation) • [Deployment](#-deployment)
+[Live Demo](#) • [Documentation](./docs/) • [Quick Start](./docs/QUICK_START.md) • [Deployment](./docs/FREE_DEPLOYMENT_GUIDE.md)
 
 </div>
 
 ---
 
-## 📋 Overview
+## 📋 Table of Contents
 
-**Sahayak** is a production-ready, AI-powered marketplace for India's blue-collar workforce. The platform enables:
-
-- **Clients** to find and hire skilled workers (plumbers, electricians, carpenters, etc.) using intelligent search
-- **Workers** to receive job requests, accept bookings, and manage their profiles
-- **Real-time communication** between clients and workers via an integrated chat system
-- **AI-powered matching** using ML scoring algorithms and NLP query parsing
-- **Multi-language support** for 8 Indian regional languages
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Quick Start](#-quick-start)
+- [Deployment](#-deployment)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
-## ✨ Features
+## 🌟 Overview
 
-### 🎯 For Job Providers (Clients)
-- **Smart Search** — Natural language processing understands queries like "Hindi-speaking plumber in Noida under ₹600"
-- **AI Match Scoring** — ML algorithm scores workers 0-100% based on skill, budget, rating, distance, and availability
-- **Live Map** — Leaflet integration showing nearby workers in real-time
-- **Voice Search** — Speech-to-text search in Hindi/English
-- **Worker Profiles** — View ratings, reviews, experience, languages, and pricing
-- **Instant Booking** — Book workers with advance payment and escrow protection
-- **Real-time Chat** — Message workers, share location, send photos
+**Sahayak** is a comprehensive AI-powered platform designed to bridge the gap between blue-collar workers and service providers. Built with modern technologies, it features intelligent job matching, multi-language support, voice-based search, and real-time communication.
 
-### 👷 For Workers
-- **Job Dashboard** — View incoming job requests in real-time
-- **One-tap Accept** — Accept jobs and start communication instantly
-- **Earnings Tracker** — Monitor daily earnings and completed jobs
-- **Profile Management** — Update skills, languages, and availability
-- **Verification** — Blockchain-simulated identity verification badges
-- **Skill Quiz** — AI-generated quizzes to earn certification badges
+### 🎯 Problem It Solves
 
-### 🤖 AI & ML Features
-- **NLP Query Parser** — Extracts skill, budget, language, and location from natural text
-- **ML Match Scoring** — Weighted algorithm (40% skill + 20% budget + 15% rating + 15% distance + 10% other)
-- **Success Probability** — Sigmoid classifier predicting job completion likelihood
-- **Price Prediction** — Linear regression for fair pricing estimates
-- **Semantic Search** — Synonym mapping (e.g., "pipe leak" → "plumber")
-- **Multi-language Detection** — Auto-translates UI into Hindi, Gujarati, Punjabi, Bengali, Tamil, Telugu, Kannada, Marathi
+- **Language Barriers**: Multi-language support with auto-translation (Hindi, Punjabi, Tamil, etc.)
+- **Digital Literacy**: Voice assistant for hands-free job search
+- **Trust & Safety**: Built-in verification, ratings, and dispute resolution
+- **Job Matching**: AI-powered matching based on skills, location, and preferences
+- **Accessibility**: 3D animated, intuitive UI designed for all users
+
+---
+
+## ✨ Key Features
+
+### 🤖 AI & Intelligence
+- **Smart Job Matching** - ML-based algorithm matching workers with suitable jobs
+- **AI Chatbot** - Multi-language conversational assistant
+- **Voice Assistant** - Hands-free search with live transcription and audio visualization
+- **Resume Parser** - Automated skill extraction from resumes
+- **Salary Predictor** - ML-based salary recommendations
 
 ### 💬 Communication
-- **Real-time Chat** — WebSocket-ready messaging system
-- **Location Sharing** — Live GPS coordinates with map preview
-- **Photo Sharing** — Upload images for job requirements
-- **Video/Voice Call UI** — Ready for integration with WebRTC
+- **Real-time Chat** - Direct messaging between workers and providers
+- **Multi-language Support** - Auto-translation for 10+ Indian languages
+- **Voice Input** - Speech recognition for text input
+
+### 🎨 User Experience
+- **3D Animated UI** - Framer Motion animations with parallax effects
+- **Glassmorphism Design** - Modern, clean interface with backdrop blur
+- **Responsive Layout** - Mobile-first design approach
+- **Audio Visualizer** - Real-time voice input feedback
+
+### 🔐 Security & Trust
+- **JWT Authentication** - Secure token-based authentication
+- **Password Encryption** - Bcrypt hashing with salt rounds
+- **Rate Limiting** - API abuse prevention
+- **Dispute Management** - Built-in resolution system
+- **Worker Verification** - Multi-step verification process
+
+### 📊 Business Features
+- **Analytics Dashboard** - Real-time metrics and insights
+- **Booking Management** - Complete job lifecycle tracking
+- **Payment Integration** - Ready for payment gateway integration
+- **Review System** - Ratings and feedback mechanism
 
 ---
 
-## 🏗️ Tech Stack
-
-### Frontend
-| Technology | Purpose |
-|---|---|
-| **React 19.2** | UI framework with hooks and modern patterns |
-| **TypeScript** | Type-safe development |
-| **Vite 8.0** | Lightning-fast build tool |
-| **TailwindCSS 4.3** | Utility-first styling |
-| **Framer Motion** | Smooth animations and transitions |
-| **React Router** | Client-side routing |
-| **Axios** | HTTP client for API requests |
-| **Leaflet** | Interactive maps with real-time markers |
-| **i18next** | Internationalization (8 languages) |
-| **Lucide Icons** | Modern icon library |
+## 🛠️ Tech Stack
 
 ### Backend
-| Technology | Purpose |
-|---|---|
-| **Python 3.11+** | Core language |
-| **FastAPI 0.111** | High-performance async API framework |
-| **Pydantic** | Data validation and serialization |
-| **SQLAlchemy** | ORM for database operations |
-| **SQLite** | Development database (PostgreSQL for production) |
-| **aiosqlite** | Async SQLite driver |
-| **Groq API** | LLM inference (Llama 3) for chatbot |
-| **JWT** | Authentication tokens |
-| **bcrypt** | Password hashing |
+- **Framework**: FastAPI 0.104.1
+- **Database**: PostgreSQL (via Supabase)
+- **ORM**: SQLAlchemy 1.4.50
+- **Authentication**: JWT with Passlib (bcrypt)
+- **Server**: Uvicorn (ASGI)
+- **Language Detection**: langdetect 1.0.9
 
-### AI & ML
-| Component | Implementation |
-|---|---|
-| **NLP Parser** | Custom Python regex + keyword extraction |
-| **Match Scoring** | Weighted multi-criteria algorithm |
-| **Price Regression** | Linear regression: `price = base + (exp × 15) + (rating × 45) ± city_index` |
-| **Success Probability** | Sigmoid: `P = 1 / (1 + e^(-(1.8×rating + 0.12×exp + 0.005×reviews - 0.25×distance - 7.5)))` |
-| **Synonym Mapping** | Manual dictionary for Indian context (e.g., "bijli" → "electrician") |
-| **Language Detection** | langdetect library with deep-translator |
+### Frontend
+- **Framework**: React 18.x with TypeScript
+- **Build Tool**: Vite 5.x
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **3D Effects**: React Parallax Tilt
+- **Icons**: Lucide React
+- **HTTP Client**: Axios
+
+### Infrastructure
+- **Database Hosting**: Supabase (PostgreSQL)
+- **Backend Hosting**: Render.com (Free Tier)
+- **Frontend Hosting**: Vercel (Free Tier)
+- **Version Control**: GitHub
+- **CI/CD**: GitHub Actions + Render Auto-Deploy
+
+---
+
+## 📁 Project Structure
+
+```
+sahayak/
+│
+├── backend/                    # FastAPI Backend
+│   ├── app/
+│   │   ├── api/               # API endpoints
+│   │   ├── models/            # Database models
+│   │   ├── services/          # Business logic
+│   │   ├── middleware/        # Custom middleware
+│   │   └── main.py            # FastAPI app
+│   ├── requirements.txt       # Python dependencies
+│   └── Dockerfile             # Docker configuration
+│
+├── react-frontend/            # React Frontend
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── App.tsx           # Main app
+│   │   └── main.tsx          # Entry point
+│   ├── package.json          # Node dependencies
+│   └── vite.config.ts        # Vite configuration
+│
+├── docs/                      # Documentation
+│   ├── FREE_DEPLOYMENT_GUIDE.md
+│   ├── QUICK_START.md
+│   ├── VOICE_ASSISTANT_GUIDE.md
+│   └── ...
+│
+├── README.md                  # This file
+├── LICENSE                    # MIT License
+├── PROJECT_STRUCTURE.md      # Detailed architecture
+└── render.yaml               # Render deployment config
+```
+
+For detailed architecture, see [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Python 3.11+** ([Download](https://www.python.org/downloads/))
-- **Node.js 18+** ([Download](https://nodejs.org/))
-- **Git** ([Download](https://git-scm.com/))
+- Node.js 18+
+- Python 3.9+
+- PostgreSQL (or Supabase account)
 
-### Installation
-
+### 1. Clone Repository
 ```bash
-# Clone repository
 git clone https://github.com/AkarshYash/IP-Project.git
-cd IP-Project/Blue-Collar-Web-Design-
+cd IP-Project
+```
 
-# Backend setup
+### 2. Backend Setup
+```bash
 cd backend
+
+# Create virtual environment
 python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # macOS/Linux
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
-cd ..
 
-# Frontend setup
+# Configure environment
+cp .env.example .env
+# Edit .env with your database credentials
+
+# Run server
+uvicorn app.main:app --reload
+```
+
+Backend will run at `http://localhost:8000`
+
+### 3. Frontend Setup
+```bash
 cd react-frontend
+
+# Install dependencies
 npm install
-cd ..
-```
 
-### Running the Project
+# Configure environment
+# Create .env file with: VITE_API_URL=http://localhost:8000
 
-**Option 1: Auto-Start (Windows)**
-```bash
-START_PROJECT.bat
-```
-
-**Option 2: Manual Start**
-
-Terminal 1 — Backend:
-```bash
-cd backend
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Terminal 2 — Frontend:
-```bash
-cd react-frontend
+# Run development server
 npm run dev
 ```
 
-### Access the Application
+Frontend will run at `http://localhost:5173`
 
-- **Frontend UI:** http://localhost:5173
-- **Backend API:** http://localhost:8000
-- **API Documentation:** http://localhost:8000/docs
-- **Health Check:** http://localhost:8000/health
+### 4. Access the Application
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
 
 ---
 
-## 🎮 Usage Guide
+## 🌐 Deployment
 
-### For Clients (Job Providers)
+### Free Hosting (No Credit Card Required)
 
-1. Open http://localhost:5173
-2. Toggle to **"Job Provider"** mode (default)
-3. Search for workers:
-   - Type: "Hindi plumber in Noida under ₹600"
-   - Or use voice search button (bottom-right)
-4. View workers on the live map
-5. Click "Hire Now" to book a worker
-6. Chat with the worker in real-time
+**Backend**: Deploy to Render.com
+**Frontend**: Deploy to Vercel
+**Database**: Use Supabase
+
+See detailed guide: [docs/FREE_DEPLOYMENT_GUIDE.md](./docs/FREE_DEPLOYMENT_GUIDE.md)
+
+### Quick Deploy Commands
+
+**Backend (Render)**:
+```bash
+# Render auto-deploys from GitHub
+# Just push to main branch
+git push origin main
+```
+
+**Frontend (Vercel)**:
+```bash
+cd react-frontend
+vercel --prod
+```
+
+---
+
+## 📚 Documentation
+
+- **[Quick Start Guide](./docs/QUICK_START.md)** - Get started in 5 minutes
+- **[Deployment Guide](./docs/FREE_DEPLOYMENT_GUIDE.md)** - Free hosting setup
+- **[Voice Assistant Guide](./docs/VOICE_ASSISTANT_GUIDE.md)** - Voice feature documentation
+- **[UI Enhancements](./docs/UI_ENHANCEMENTS.md)** - UI/UX features
+- **[Implementation Guide](./docs/IMPLEMENTATION_GUIDE.md)** - Technical implementation
+- **[Enterprise Plan](./docs/ENTERPRISE_UPGRADE_PLAN.md)** - Future roadmap
+- **[Project Structure](./PROJECT_STRUCTURE.md)** - Architecture overview
+
+---
+
+## 🎯 Use Cases
 
 ### For Workers
+- Find jobs matching their skills
+- Communicate in their preferred language
+- Use voice search for easy access
+- Track bookings and earnings
+- Build reputation through ratings
 
-1. Toggle to **"Worker"** mode in header
-2. View incoming job requests
-3. See job details (service, location, pay)
-4. Click "Accept Job" to take the assignment
-5. Message the client via chat
-
----
-
-## 📡 API Documentation
-
-### Base URL
-```
-http://localhost:8000
-```
-
-### Authentication Endpoints
-
-#### POST `/api/auth/login`
-```json
-{
-  "username": "admin",
-  "password": "sahayak2024"
-}
-```
-
-Response:
-```json
-{
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-  "token_type": "bearer",
-  "user": {
-    "username": "admin",
-    "email": "admin@sahayak.ai",
-    "role": "admin"
-  }
-}
-```
-
-### Worker Endpoints
-
-#### GET `/api/workers/search?query={query}`
-Search workers with natural language.
-
-Example:
-```bash
-GET /api/workers/search?query=Hindi%20electrician%20Noida%20under%20500
-```
-
-Response:
-```json
-{
-  "workers": [
-    {
-      "id": "W0048",
-      "name": "Veer Karpe",
-      "skill": "Electrician",
-      "rating": 4.8,
-      "price": 450,
-      "distance": "1.2km",
-      "match_score": 95,
-      "success_rate": 87,
-      "languages": ["Hindi", "English"],
-      "available": true
-    }
-  ],
-  "total": 47,
-  "extracted_params": {
-    "skill": "electrician",
-    "budget": 500,
-    "language": "Hindi"
-  }
-}
-```
-
-### Booking Endpoints
-
-#### POST `/api/bookings/`
-Create a new booking.
-
-```json
-{
-  "worker_id": "W0048",
-  "customer_id": "C-DEMO",
-  "customer_name": "Anjali Sharma",
-  "service": "Plumber",
-  "date": "2026-06-15",
-  "time": "ASAP",
-  "address": "Sector 62, Noida",
-  "advance_amount": 500
-}
-```
-
-#### GET `/api/bookings/`
-List all bookings.
-
-#### POST `/api/bookings/{booking_id}/accept`
-Worker accepts a booking.
-
-### Full API Documentation
-Visit http://localhost:8000/docs for interactive Swagger documentation.
+### For Service Providers
+- Post job requirements
+- Find verified skilled workers
+- Manage bookings and payments
+- Track worker performance
+- Resolve disputes efficiently
 
 ---
 
-## 🗂️ Project Structure
+## 🔧 Configuration
 
-```
-Blue-Collar-Web-Design-/
-│
-├── backend/                          # Python FastAPI backend
-│   ├── app/
-│   │   ├── api/                      # API route handlers
-│   │   │   ├── auth.py              # Login, register, JWT
-│   │   │   ├── workers.py           # Worker search, ML scoring
-│   │   │   ├── bookings.py          # Booking management
-│   │   │   ├── chatbot.py           # AI chatbot with RAG
-│   │   │   ├── jobs.py              # Job postings
-│   │   │   ├── analytics.py         # Dashboard KPIs
-│   │   │   ├── disputes.py          # Dispute resolution
-│   │   │   └── conversations.py     # Chat history
-│   │   ├── models/
-│   │   │   ├── database.py          # SQLAlchemy setup
-│   │   │   └── db_models.py         # Database models
-│   │   ├── services/
-│   │   │   ├── matching_engine.py   # ML scoring algorithms
-│   │   │   ├── chatbot_engine.py    # LLM integration
-│   │   │   ├── translation_service.py # Multi-language
-│   │   │   └── supabase_client.py   # External auth
-│   │   ├── middleware/
-│   │   │   └── rate_limiter.py      # API rate limiting
-│   │   ├── main.py                  # FastAPI app entry point
-│   │   └── config.py                # App configuration
-│   ├── requirements.txt             # Python dependencies
-│   ├── .env                         # Environment variables (gitignored)
-│   └── sahayak.db                   # SQLite database
-│
-├── react-frontend/                   # React + TypeScript frontend
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── ProviderDashboard.tsx # Client UI
-│   │   │   ├── WorkerDashboard.tsx   # Worker UI
-│   │   │   └── ChatWindow.tsx        # Real-time chat
-│   │   ├── lib/
-│   │   │   └── utils.ts              # Helper functions
-│   │   ├── assets/                   # Images, icons
-│   │   ├── App.tsx                   # Main app component
-│   │   ├── main.tsx                  # React entry point
-│   │   ├── i18n.ts                   # Language configuration
-│   │   └── index.css                 # Global styles
-│   ├── public/
-│   │   └── favicon.svg
-│   ├── package.json                  # Node dependencies
-│   ├── vite.config.ts               # Vite configuration
-│   ├── tsconfig.json                # TypeScript config
-│   └── .env.local                   # Frontend env variables
-│
-├── blue_collar_workers_500.csv       # 500 worker profiles database
-├── START_PROJECT.bat                 # One-click startup script
-├── .gitignore                        # Git ignore rules
-├── LICENSE                           # MIT License
-└── README.md                         # This file
-```
+### Environment Variables
 
----
-
-## 🌍 Deployment
-
-### Frontend Deployment (Vercel)
-
-1. **Connect GitHub repo to Vercel:**
-   ```bash
-   cd react-frontend
-   npm install -g vercel
-   vercel
-   ```
-
-2. **Configure build settings:**
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-   - Environment Variable: `VITE_API_URL=https://your-backend-url.com`
-
-3. **Deploy:**
-   ```bash
-   vercel --prod
-   ```
-
-### Backend Deployment (Render.com)
-
-1. **Create new Web Service** on [Render.com](https://render.com)
-
-2. **Connect GitHub repository**
-
-3. **Configure:**
-   - Root Directory: `backend`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-
-4. **Environment Variables:**
-   ```
-   GROQ_API_KEY=your_groq_key
-   JWT_SECRET=your_random_secret
-   DATABASE_URL=postgresql+asyncpg://...
-   DEBUG=false
-   CORS_ORIGINS=https://your-frontend.vercel.app
-   ```
-
-5. **Add PostgreSQL database** (optional, for production)
-
-### Alternative Deployment Options
-- **Railway** — Full-stack deployment
-- **Fly.io** — Global edge deployment
-- **AWS EC2 + S3** — Complete control
-- **Docker** — Containerized deployment
-
----
-
-## 🔐 Environment Variables
-
-### Backend (`.env`)
+**Backend (.env)**:
 ```env
-# LLM API
-GROQ_API_KEY=your_groq_api_key_here
-
-# Database
-DATABASE_URL=sqlite+aiosqlite:///./sahayak.db
-
-# Auth
-JWT_SECRET=your_secure_random_string
-JWT_EXPIRE_MINUTES=1440
-
-# Optional
-GEMINI_API_KEY=for_google_ai
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql://user:password@host:5432/database
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-supabase-anon-key
+JWT_SECRET=your-secret-key
 ```
 
-### Frontend (`.env.local`)
+**Frontend (.env)**:
 ```env
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=https://your-backend.onrender.com
 ```
 
 ---
@@ -423,48 +284,14 @@ VITE_API_URL=http://localhost:8000
 ### Backend Tests
 ```bash
 cd backend
-pytest tests/ -v
+pytest
 ```
 
-### API Manual Testing
-```bash
-# Health check
-curl http://localhost:8000/health
-
-# Search workers
-curl "http://localhost:8000/api/workers/search?query=plumber"
-
-# Create booking
-curl -X POST http://localhost:8000/api/bookings/ \
-  -H "Content-Type: application/json" \
-  -d '{"worker_id":"W0048","customer_name":"Test",...}'
-```
-
-### Frontend Testing
+### Frontend Tests
 ```bash
 cd react-frontend
-npm run lint
-npm run build  # Test production build
+npm run test
 ```
-
----
-
-## 📊 Database Schema
-
-### Users
-- id, username, email, hashed_password, role, is_active, created_at, last_login
-
-### Bookings
-- id, worker_id, customer_id, service, date, time, address, advance_amount, status, created_at
-
-### Conversations
-- id, session_id, language, channel, intent_summary, is_active, created_at, updated_at
-
-### Messages
-- id, conversation_id, role, content, intent, confidence, response_time_ms, feedback, created_at
-
-### Workers (CSV-based)
-- worker_id, full_name, designation, rating, reviews_count, hourly_rate_inr, experience_years, mobile_number, state, city, languages_known, payment_method, availability, profile_summary
 
 ---
 
@@ -480,9 +307,9 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## 📝 License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ---
 
@@ -491,26 +318,30 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Akarsh Chaturvedi**
 
 - GitHub: [@AkarshYash](https://github.com/AkarshYash)
-- Repository: [IP-Project](https://github.com/AkarshYash/IP-Project)
+- Project: [Sahayak Platform](https://github.com/AkarshYash/IP-Project)
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **Groq** for blazing-fast LLM inference
-- **Leaflet** for interactive maps
-- **TailwindCSS** for beautiful styling
-- **FastAPI** for modern Python APIs
-- **React** team for the amazing framework
+- FastAPI for the excellent Python web framework
+- React team for the amazing frontend library
+- Supabase for the PostgreSQL hosting
+- Render & Vercel for free hosting tiers
+- All contributors and users of this platform
 
 ---
 
 ## 📞 Support
 
-For issues and questions:
-- Open an issue on GitHub
-- Email: [your-email@example.com]
+For support, email [support@sahayak.com](mailto:support@sahayak.com) or open an issue on GitHub.
 
 ---
 
-**Made with ❤️ for India's Blue-Collar Workforce**
+<div align="center">
+
+**⭐ Star this repo if you find it useful!**
+
+Made with ❤️ in India
+
+</div>
