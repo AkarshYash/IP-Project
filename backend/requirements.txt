@@ -21,4 +21,4 @@ httpx==0.24.1
 passlib[bcrypt]==1.7.4
 
 # Basic utilities
-pydantic==1.10.13
+pydantic==2.5.3
