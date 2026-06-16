@@ -1,22 +1,15 @@
-# Render.com deployment configuration
 services:
-  # Backend API Service
   - type: web
-    name: sahayak-api
+    name: sahayak-backend
     runtime: python
-    region: oregon
     plan: free
+    branch: main
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
+      - key: DATABASE_URL
+        value: postgresql://postgres:Akardhyash@2021to2026@db.wuysrqpstqfxzwdkhwwl.supabase.co:5432/postgres
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: DEBUG
-        value: false
-      - key: JWT_SECRET
-        generateValue: true
-      - key: CORS_ORIGINS
-        value: "*"
-      - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./sahayak.db
-    healthCheckPath: /health
